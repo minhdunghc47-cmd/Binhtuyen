@@ -25,7 +25,7 @@ export async function fetchFromFirebase(colRef: any) {
     const snapshot = await getDocs(colRef);
     return snapshot.docs
       .filter(doc => doc.id !== 'bulk') // Ignore bulk array doc to prevent state corruption
-      .map(doc => doc.data());
+      .map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (err) {
     console.error('Error fetching from Firebase:', err);
     throw err;
