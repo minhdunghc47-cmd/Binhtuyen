@@ -29,6 +29,7 @@ export default function AIChatBot({
   const [isOpen, setIsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [aiRules, setAiRules] = useState<string[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -38,12 +39,33 @@ export default function AIChatBot({
   useEffect(() => {
     const savedKey = localStorage.getItem('GEMINI_API_KEY');
     if (savedKey) setApiKey(savedKey);
+
+    const savedRules = localStorage.getItem('AI_RULES');
+    if (savedRules) {
+      try { setAiRules(JSON.parse(savedRules)); } catch (e) {}
+    }
     
-    // Welcome message
-    setMessages([
-      { id: 'welcome', role: 'system', content: 'Xin chào! Tôi là Trợ lý AI PCCC. Đồng chí có thể ra lệnh cho tôi cập nhật ngày kiểm tra cơ sở hoặc giao việc cho cán bộ.' }
-    ]);
+    const savedMessages = localStorage.getItem('AI_CHAT_HISTORY');
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (e) {}
+    } else {
+      // Welcome message only if no history
+      setMessages([
+        { id: 'welcome', role: 'system', content: 'Xin chào! Tôi là Trợ lý AI PCCC. Đồng chí có thể ra lệnh cho tôi cập nhật ngày kiểm tra cơ sở, giao việc, hoặc ghi nhớ các quy tắc đặc thù để tôi học theo.' }
+      ]);
+    }
   }, []);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Only keep the last 50 messages to avoid token limit and localStorage bloat
+      const msgsToSave = messages.length > 50 ? messages.slice(messages.length - 50) : messages;
+      localStorage.setItem('AI_CHAT_HISTORY', JSON.stringify(msgsToSave));
+    }
+  }, [messages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -89,6 +111,9 @@ export default function AIChatBot({
 - Tổng số dự án thi công: ${projects.length}
 - Các cán bộ quản lý: ${MANAGERS.join(', ')}
 
+*** SỔ TAY TRÍ TUỆ (QUY TẮC ĐÃ HỌC TỪ CÁN BỘ) ***
+${aiRules.length > 0 ? aiRules.map((r, i) => `${i + 1}. ${r}`).join('\n') : 'Chưa có quy tắc nào.'}
+
 *** DANH SÁCH ${tasks.length} CÔNG VIỆC HIỆN TẠI ***
 ${taskDetails || 'Chưa có công việc nào.'}
 ********************************************
@@ -102,11 +127,20 @@ Nếu người dùng ra lệnh hành động (tạo việc, cập nhật), hãy 
 
 ${statsStr}`;
 
+    // Map previous messages to Gemini format (ignore system messages and those with revertActions for simplicity, or just map user/model)
+    // To save tokens, we might only send the last 10 messages of conversation context
+    const recentMessages = messages.slice(-10).filter(m => m.role === 'user' || m.role === 'model');
+    const historyContents = recentMessages.map(m => ({
+      role: m.role,
+      parts: [{ text: m.content }]
+    }));
+
     const requestBody = {
       systemInstruction: {
         parts: [{ text: systemPrompt }]
       },
       contents: [
+        ...historyContents,
         {
           role: "user",
           parts: [{ text: userText }]
@@ -153,13 +187,24 @@ ${statsStr}`;
             },
             {
               name: "delete_facility",
-              description: "Xóa một cơ sở khỏi hệ thống PCCC",
+              description: "Xóa một cơ sở khỏi danh sách quản lý",
               parameters: {
                 type: "OBJECT",
                 properties: {
                   facilityName: { type: "STRING", description: "Tên cơ sở cần xóa" }
                 },
                 required: ["facilityName"]
+              }
+            },
+            {
+              name: "memorize_rule",
+              description: "Ghi nhớ một quy tắc, đặc thù công việc, hoặc sở thích của cán bộ để sử dụng cho các lần trò chuyện sau",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  rule: { type: "STRING", description: "Nội dung quy tắc cần nhớ (VD: Quán Karaoke X luôn do đ/c Dũng phụ trách)" }
+                },
+                required: ["rule"]
               }
             }
           ]
@@ -188,8 +233,8 @@ ${statsStr}`;
       }
 
       validModels.sort((a: any, b: any) => {
-        if (a.name.includes('pro') && !b.name.includes('pro')) return -1;
-        if (!a.name.includes('pro') && b.name.includes('pro')) return 1;
+        if (a.name.includes('flash') && !b.name.includes('flash')) return -1;
+        if (!a.name.includes('flash') && b.name.includes('flash')) return 1;
         return 0;
       });
 
@@ -283,6 +328,13 @@ ${statsStr}`;
             } else {
               responseMsg = `❌ Không tìm thấy cơ sở "${facName}".`;
             }
+          }
+          else if (fnName === "memorize_rule") {
+            const rule = args.rule;
+            const newRules = [...aiRules, rule];
+            setAiRules(newRules);
+            localStorage.setItem('AI_RULES', JSON.stringify(newRules));
+            responseMsg = `🧠 Đã ghi nhớ quy tắc: **${rule}**.`;
           }
           finalMessage += responseMsg + "\n";
         }
