@@ -1,0 +1,309 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Facility, Task } from '../types';
+import { Bot, X, Send, Settings, Sparkles, CheckCircle } from 'lucide-react';
+import { generateId, MANAGERS } from '../data';
+
+interface AIChatBotProps {
+  facilities: Facility[];
+  onUpdateFacility: (f: Facility) => void;
+  onAddTask: (t: Task) => void;
+}
+
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'model' | 'system';
+  content: string;
+}
+
+export default function AIChatBot({ facilities, onUpdateFacility, onAddTask }: AIChatBotProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const savedKey = localStorage.getItem('GEMINI_API_KEY');
+    if (savedKey) setApiKey(savedKey);
+    
+    // Welcome message
+    setMessages([
+      { id: 'welcome', role: 'system', content: 'Xin chào! Tôi là Trợ lý AI PCCC. Đồng chí có thể ra lệnh cho tôi cập nhật ngày kiểm tra cơ sở hoặc giao việc cho cán bộ.' }
+    ]);
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isOpen]);
+
+  const saveApiKey = (key: string) => {
+    setApiKey(key);
+    localStorage.setItem('GEMINI_API_KEY', key);
+    setShowSettings(false);
+  };
+
+  // Hàm tìm kiếm cơ sở gần đúng nhất
+  const findFacility = (name: string): Facility | undefined => {
+    const normalizedName = name.toLowerCase().trim();
+    let found = facilities.find(f => f.name.toLowerCase() === normalizedName);
+    if (found) return found;
+    found = facilities.find(f => f.name.toLowerCase().includes(normalizedName) || normalizedName.includes(f.name.toLowerCase()));
+    return found;
+  };
+
+  const findAssignee = (name: string): string => {
+    const normalized = name.toLowerCase();
+    const found = MANAGERS.find(m => m.toLowerCase().includes(normalized) || normalized.includes(m.toLowerCase()));
+    return found || MANAGERS[0];
+  };
+
+  const callGeminiAPI = async (userText: string) => {
+    if (!apiKey) {
+      return "LỖI: Vui lòng vào Cài đặt (⚙️) để nhập Gemini API Key trước khi sử dụng.";
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const systemPrompt = `Bạn là trợ lý AI quản lý PCCC. Hôm nay là ngày ${todayStr}.
+Nhiệm vụ của bạn là lắng nghe báo cáo của cán bộ và thực hiện các hành động bằng công cụ (function calling).
+Chỉ gọi công cụ khi cần thiết. Nếu người dùng ra lệnh, hãy gọi công cụ tương ứng, sau đó trả lời ngắn gọn bằng tiếng Việt rằng bạn đã thực hiện lệnh.`;
+
+    const requestBody = {
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: userText }]
+        }
+      ],
+      tools: [
+        {
+          functionDeclarations: [
+            {
+              name: "update_inspection_date",
+              description: "Cập nhật ngày kiểm tra an toàn PCCC cho một cơ sở",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  facilityName: { type: "STRING", description: "Tên của cơ sở (VD: Nhà nghỉ Tùng Lâm, Quán Karaoke X)" },
+                  date: { type: "STRING", description: "Ngày kiểm tra, định dạng YYYY-MM-DD" }
+                },
+                required: ["facilityName", "date"]
+              }
+            },
+            {
+              name: "create_task",
+              description: "Tạo nhiệm vụ/công việc mới giao cho cán bộ",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  title: { type: "STRING", description: "Mô tả công việc (VD: Đi phúc tra quán karaoke X)" },
+                  assignee: { type: "STRING", description: "Tên người được giao (VD: Đ/c Dũng)" },
+                  deadline: { type: "STRING", description: "Hạn chót, định dạng YYYY-MM-DD. Nếu không rõ thì để trống." }
+                },
+                required: ["title", "assignee"]
+              }
+            }
+          ]
+        }
+      ],
+      toolConfig: {
+        functionCallingConfig: { mode: "AUTO" }
+      }
+    };
+
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Gemini API Error:", err);
+        return `LỖI API: ${err.error?.message || 'Không thể kết nối tới Gemini'}`;
+      }
+
+      const data = await res.json();
+      const candidate = data.candidates?.[0];
+      if (!candidate) return "Không nhận được phản hồi từ AI.";
+
+      const part = candidate.content?.parts?.[0];
+      
+      if (part && part.functionCall) {
+        const fnName = part.functionCall.name;
+        const args = part.functionCall.args;
+        
+        let responseMsg = "";
+
+        if (fnName === "update_inspection_date") {
+          const facName = args.facilityName;
+          const dateStr = args.date;
+          
+          const facility = findFacility(facName);
+          if (facility) {
+            onUpdateFacility({ ...facility, lastInspectionDate: dateStr });
+            responseMsg = `✅ Đã cập nhật thành công ngày kiểm tra cho cơ sở **${facility.name}** thành ${new Date(dateStr).toLocaleDateString('vi-VN')}.`;
+          } else {
+            responseMsg = `❌ Không tìm thấy cơ sở nào khớp với tên "${facName}" trong cơ sở dữ liệu.`;
+          }
+        } 
+        else if (fnName === "create_task") {
+          const title = args.title;
+          const assigneeName = args.assignee;
+          const deadline = args.deadline || '';
+          
+          const realAssignee = findAssignee(assigneeName);
+          
+          const newTask: Task = {
+            id: generateId(),
+            title,
+            assignee: realAssignee,
+            deadline,
+            isCompleted: false,
+            createdAt: Date.now()
+          };
+          onAddTask(newTask);
+          responseMsg = `✅ Đã tạo nhiệm vụ: **${title}** và giao cho **${realAssignee}**${deadline ? ` (Hạn: ${new Date(deadline).toLocaleDateString('vi-VN')})` : ''}.`;
+        }
+        
+        return responseMsg;
+      }
+      
+      if (part && part.text) {
+        return part.text;
+      }
+
+      return "AI không đưa ra phản hồi hợp lệ.";
+
+    } catch (error: any) {
+      console.error(error);
+      return `LỖI HỆ THỐNG: ${error.message}`;
+    }
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+    
+    const userMsg = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { id: generateId(), role: 'user', content: userMsg }]);
+    
+    setIsLoading(true);
+    const aiResponse = await callGeminiAPI(userMsg);
+    setIsLoading(false);
+    
+    setMessages(prev => [...prev, { id: generateId(), role: 'model', content: aiResponse }]);
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`fixed bottom-6 right-6 p-4 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 z-50 ${
+          isOpen ? 'bg-slate-700 text-slate-300' : 'bg-blue-600 hover:bg-blue-500 text-white animate-bounce'
+        }`}
+      >
+        {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-7 w-7" />}
+      </button>
+
+      {isOpen && (
+        <div className="fixed bottom-24 right-6 w-[350px] md:w-[400px] h-[500px] bg-slate-900 border border-slate-700 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col z-50 overflow-hidden transform transition-all">
+          
+          <div className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-500 p-1.5 rounded-lg">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="font-bold text-slate-100">AI Trợ Lý PCCC</h3>
+            </div>
+            <button 
+              onClick={() => setShowSettings(!showSettings)}
+              className="text-slate-400 hover:text-white p-1 rounded"
+              title="Cài đặt API Key"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+          </div>
+
+          {showSettings && (
+            <div className="p-4 bg-slate-800 border-b border-slate-700">
+              <label className="block text-xs font-semibold text-slate-400 mb-1">Gemini API Key</label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 mb-2"
+              />
+              <button 
+                onClick={() => saveApiKey(apiKey)}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded"
+              >
+                Lưu Mã Khóa (Lưu trên máy)
+              </button>
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50">
+            {messages.map((msg) => (
+              <div 
+                key={msg.id} 
+                className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+              >
+                <div 
+                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-blue-600 text-white rounded-br-none' 
+                      : msg.role === 'system'
+                        ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-800 rounded-bl-none'
+                        : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700'
+                  }`}
+                >
+                  {msg.content.split('**').map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
+                </div>
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex items-start">
+                <div className="bg-slate-800 text-slate-400 rounded-2xl rounded-bl-none px-4 py-3 text-sm flex gap-1.5 items-center">
+                  <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                  <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                  <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="p-3 bg-slate-800 border-t border-slate-700">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="VD: Cập nhật nhà nghỉ tùng lâm hôm nay"
+                className="flex-1 bg-slate-900 border border-slate-700 rounded-full px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                onClick={handleSend}
+                disabled={isLoading || !input.trim()}
+                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full p-2.5 transition-colors"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          
+        </div>
+      )}
+    </>
+  );
+}
