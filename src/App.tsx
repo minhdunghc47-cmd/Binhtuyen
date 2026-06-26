@@ -442,12 +442,10 @@ export default function App() {
               <span className={`h-2.5 w-2.5 rounded-full ${isSyncing ? 'bg-amber-400 animate-spin' : 'bg-emerald-500'} flex-shrink-0`}></span>
               <span className="font-bold text-slate-400 truncate">{syncMessage}</span>
             </div>
-            <button
-              onClick={handleForceSheetsSync}
-              className="w-full py-1 text-[10px] bg-slate-950 border border-slate-800 hover:border-slate-700 font-extrabold text-blue-400 hover:text-blue-300 rounded transition uppercase"
-            >
-              Sao Lưu Sheets
-            </button>
+            <div className="w-full py-1 text-[10px] bg-emerald-950/20 border border-emerald-900/30 text-emerald-500 font-extrabold rounded flex items-center justify-center gap-1.5 uppercase tracking-wide">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+              Bật Auto-Sync
+            </div>
           </div>
         </div>
       </aside>
@@ -600,17 +598,12 @@ export default function App() {
               </div>
             </div>
 
-            {/* Clear sync button inside mobile drawer */}
-            <div className="p-4 border-t border-slate-900">
-              <button
-                onClick={() => {
-                  handleForceSheetsSync();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-bold text-blue-400 rounded-lg"
-              >
-                Đồng Bộ Lên Sheets
-              </button>
+            {/* Auto-Sync Indicator */}
+            <div className="mt-8 pt-4 border-t border-slate-900/50">
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-500/80 justify-center">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+                Đồng bộ Thời Gian Thực Bật
+              </div>
             </div>
           </div>
         </div>
@@ -620,6 +613,8 @@ export default function App() {
       <AIChatBot 
         facilities={facilities} 
         tasks={tasks}
+        funds={funds}
+        projects={projects}
         onUpdateFacility={handleUpdateFacility}
         onDeleteFacility={handleDeleteFacility}
         onAddTask={handleAddTask}

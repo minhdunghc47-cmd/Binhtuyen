@@ -6,6 +6,8 @@ import { generateId, MANAGERS } from '../data';
 interface AIChatBotProps {
   facilities: Facility[];
   tasks: Task[];
+  funds: FundTransaction[];
+  projects: Project[];
   onUpdateFacility: (f: Facility) => void;
   onDeleteFacility: (id: string) => void;
   onAddTask: (t: Task) => void;
@@ -19,7 +21,7 @@ interface ChatMessage {
 }
 
 export default function AIChatBot({ 
-  facilities, tasks, onUpdateFacility, onDeleteFacility, onAddTask, onDeleteTask 
+  facilities, tasks, funds, projects, onUpdateFacility, onDeleteFacility, onAddTask, onDeleteTask 
 }: AIChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
@@ -71,9 +73,28 @@ export default function AIChatBot({
     }
 
     const todayStr = new Date().toISOString().slice(0, 10);
-    const systemPrompt = `Bạn là trợ lý AI quản lý PCCC. Hôm nay là ngày ${todayStr}.
+    const balance = funds.reduce((acc, f) => f.type === 'thu' ? acc + f.amount : acc - f.amount, 0);
+    const completedTasks = tasks.filter(t => t.isCompleted).length;
+    
+    const statsStr = `
+*** DỮ LIỆU BÁO CÁO HIỆN TẠI TỪ HỆ THỐNG ***
+- Tổng số cơ sở quản lý: ${facilities.length}
+- Số cơ sở Nhóm 1: ${facilities.filter(f => f.group === 'Nhóm 1').length}
+- Số cơ sở Nhóm 2: ${facilities.filter(f => f.group === 'Nhóm 2').length}
+- Tổng quỹ Đội hiện tại: ${balance.toLocaleString('vi-VN')} VNĐ
+- Tổng số dự án thi công: ${projects.length}
+- Tình trạng công việc: ${completedTasks}/${tasks.length} đã hoàn thành
+- Các cán bộ quản lý: ${MANAGERS.join(', ')}
+********************************************
+`;
+
+    const systemPrompt = `Bạn là trợ lý AI quản lý PCCC tên là Trợ lý Bình Tuyền. Hôm nay là ngày ${todayStr}.
 Nhiệm vụ của bạn là lắng nghe báo cáo của cán bộ và thực hiện các hành động bằng công cụ (function calling).
-Chỉ gọi công cụ khi cần thiết. Nếu người dùng ra lệnh, hãy gọi công cụ tương ứng, sau đó trả lời ngắn gọn bằng tiếng Việt rằng bạn đã thực hiện lệnh.`;
+Bạn cũng có thể trả lời các câu hỏi về số liệu dựa trên Bảng Dữ Liệu dưới đây.
+Nếu người dùng hỏi số liệu, hãy lấy từ Bảng Dữ Liệu và trả lời thân thiện, lịch sự.
+Nếu người dùng ra lệnh hành động (tạo việc, cập nhật), hãy gọi công cụ tương ứng, sau đó trả lời ngắn gọn tiếng Việt.
+
+${statsStr}`;
 
     const requestBody = {
       systemInstruction: {
