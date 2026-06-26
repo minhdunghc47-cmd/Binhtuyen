@@ -114,6 +114,8 @@ Chỉ gọi công cụ khi cần thiết. Nếu người dùng ra lệnh, hãy g
       toolConfig: {
         functionCallingConfig: { mode: "AUTO" }
       }
+    };
+
     try {
       // 1. Tự động tìm model phù hợp nhất được cấp quyền cho API Key này
       const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
