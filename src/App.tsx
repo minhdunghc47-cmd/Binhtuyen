@@ -29,7 +29,6 @@ import Scheduler from './components/Scheduler';
 import Kanban from './components/Kanban';
 import Finance from './components/Finance';
 import Projects from './components/Projects';
-import Notebook from './components/Notebook';
 import { fetchFromFirebase, facilitiesRef, tasksRef, fundsRef, projectsRef, db } from './firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 
@@ -399,18 +398,6 @@ export default function App() {
                   <KanbanSquare className="h-4 w-4" />
                   <span>Bảng việc Kanban</span>
                 </button>
-
-                <button
-                  onClick={() => { setActiveTab('notebook'); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
-                    activeTab === 'notebook'
-                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
-                      : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-                  }`}
-                >
-                  <BookOpen className="h-4 w-4" />
-                  <span>Sổ tay Notebook</span>
-                </button>
               </nav>
             </div>
 
@@ -550,10 +537,6 @@ export default function App() {
                 onSettleProfitToQuỹ={handleSettleProfitToQuỹ}
               />
             )}
-
-            {activeTab === 'notebook' && (
-              <Notebook />
-            )}
           </div>
         </div>
       </main>
@@ -593,7 +576,6 @@ export default function App() {
                     { id: 'facilities', label: 'Hồ sơ cơ sở', icon: <Building2 /> },
                     { id: 'scheduler', label: 'Tuyến kế hoạch', icon: <CalendarRange /> },
                     { id: 'tasks', label: 'Bảng việc Kanban', icon: <KanbanSquare /> },
-                    { id: 'notebook', label: 'Sổ tay Notebook', icon: <BookOpen /> },
                     { id: 'finance', label: 'Sổ quỹ tổ chi', icon: <WalletCards /> },
                     { id: 'projects', label: 'Dự án thi công', icon: <Hammer /> },
                   ].map((m) => (
