@@ -381,13 +381,13 @@ export default function Facilities({
   return (
     <div className="space-y-4">
       {/* Search and Action Suite */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-cyber-panel border-l-4 border-cyber-cyan p-4 clip-corner glow-box-cyan">
         <div>
-          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Building className="h-5 w-5 text-red-400" />
-            Cơ Sở Địa Bàn Quản Lý ({filteredFacilities.length})
+          <h2 className="text-xl font-bold font-mono text-cyber-cyan flex items-center gap-2 glow-text-cyan uppercase">
+            <Building className="h-5 w-5" />
+            [ DATABASE ] CƠ SỞ ĐỊA BÀN ({filteredFacilities.length})
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-cyber-cyan/70 font-mono mt-1 uppercase">
             Tổng {facilities.length} hồ sơ: {facilities.filter(f => f.recordStatus === 'hien_hanh').length} hiện hành, {facilities.filter(f => f.recordStatus === 'chua_dang_ky').length} chưa cấp số, {facilities.filter(f => f.recordStatus === 'da_nop_luu').length} đã nộp lưu, {facilities.filter(f => f.recordStatus === 'du_kien_nop_luu').length} dự kiến nộp lưu.
           </p>
         </div>
@@ -396,13 +396,13 @@ export default function Facilities({
         <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
           {/* Quick Search */}
           <div className="relative flex-1 sm:flex-initial min-w-[200px]">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-cyber-cyan" />
             <input
               type="text"
-              placeholder="Tìm kiếm nhanh..."
+              placeholder="TÌM KIẾM..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs md:text-sm bg-slate-900 border border-slate-800 rounded-lg text-slate-300 focus:outline-none focus:border-red-500 transition-colors"
+              className="w-full pl-9 pr-3 py-2 text-xs md:text-sm bg-cyber-dark border border-cyber-cyan rounded-none clip-corner text-cyber-cyan focus:outline-none focus:border-cyber-magenta focus:shadow-[0_0_10px_#ff00ff] transition-all font-mono uppercase placeholder-cyber-cyan/50"
             />
           </div>
 
@@ -491,35 +491,35 @@ export default function Facilities({
 
           <button
             onClick={() => openFormModal()}
-            className="py-2 px-4 bg-red-700/90 hover:bg-red-650 text-white rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow"
+            className="py-2 px-4 bg-cyber-magenta/20 border border-cyber-magenta hover:bg-cyber-magenta/40 text-cyber-magenta clip-corner text-xs md:text-sm font-bold flex items-center gap-1.5 glow-box-magenta glow-text-magenta transition-all uppercase font-mono"
           >
             <Plus className="h-4 w-4" />
-            <span>Thêm</span>
+            <span>[+] THÊM MỚI</span>
           </button>
         </div>
       </div>
 
       {/* Main Grid Card Listing Container */}
-      <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl overflow-hidden">
+      <div className="bg-cyber-panel border border-cyber-cyan clip-corner-reverse overflow-hidden glow-box-cyan relative mt-6">
         {/* Table Tip */}
-        <div className="bg-slate-950/20 px-4 py-2 border-b border-slate-800/80 text-[11px] text-slate-400 flex items-center gap-2">
-          <Info className="h-3.5 w-3.5 text-blue-400" />
-          <span>Chiến sĩ có thể chỉnh sửa nhanh nhãn/mã/phụ trách trực tiếp bằng cách sửa thẳng nội dung trong cột.</span>
+        <div className="bg-cyber-dark px-4 py-2 border-b border-cyber-cyan/30 text-[11px] text-cyber-yellow flex items-center gap-2 font-mono glow-text-yellow">
+          <Info className="h-3.5 w-3.5" />
+          <span>[ HỆ THỐNG ] Có thể chỉnh sửa dữ liệu trực tiếp vào các trường (Auto-Save Active).</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-800">
-            <thead className="bg-slate-950/40">
+          <table className="min-w-full font-mono">
+            <thead className="bg-cyber-dark border-b border-cyber-cyan/30">
               <tr>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-slate-400 uppercase w-10">STT</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-1/4">Tên Cơ Sở / Loại hình / Chu kỳ</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Cán bộ QL / Trực thuộc / Thôn</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Hồ sơ & Huấn luyện năm nay</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase text-center">Trạng thái kiểm tra</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase">Hành động</th>
+                <th className="px-3 py-3 text-center text-xs font-bold text-cyber-cyan uppercase w-10 glow-text-cyan">STT</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-cyber-cyan uppercase w-1/4 glow-text-cyan">Mục Tiêu / Phân Loại</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-cyber-cyan uppercase glow-text-cyan">Chỉ Huy / Tọa Độ</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-cyber-cyan uppercase glow-text-cyan">Dữ Liệu Trữ Lượng</th>
+                <th className="px-4 py-3 text-center text-xs font-bold text-cyber-cyan uppercase glow-text-cyan">Trạng Thái Quét</th>
+                <th className="px-4 py-3 text-right text-xs font-bold text-cyber-cyan uppercase glow-text-cyan">Tác Vụ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 bg-transparent text-xs md:text-sm">
+            <tbody className="bg-transparent text-xs md:text-sm">
               {filteredFacilities.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-500 font-bold italic">

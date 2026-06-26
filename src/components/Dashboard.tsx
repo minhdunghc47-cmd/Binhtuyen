@@ -156,18 +156,17 @@ export default function Dashboard({
 
   return (
     <div className="space-y-6">
-      {/* Eye Care Tip Header */}
-      <div className="bg-amber-950/30 border border-amber-900/60 rounded-xl p-4 flex items-start gap-3">
-        <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400 flex-shrink-0">
-          <Activity className="h-5 w-5 animate-pulse" />
+      {/* HUD Header */}
+      <div className="bg-cyber-dark border-l-4 border-cyber-cyan p-4 flex items-start gap-3 clip-corner glow-box-cyan">
+        <div className="p-2 bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan flex-shrink-0 glow-box-cyan">
+          <Activity className="h-5 w-5 animate-pulse glow-text-cyan" />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-amber-300">
-            ☀️ Chế Độ Bảo Vệ Mắt PCCC Bình Tuyền
+          <h4 className="text-sm font-bold font-mono text-cyber-cyan uppercase tracking-widest glow-text-cyan">
+            HỆ THỐNG CHỈ HUY PCCC BÌNH TUYỀN [ ONLINE ]
           </h4>
-          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-            Hệ thống sử dụng bảng màu **Muted Charcoal & Warm Amber**, tối ưu độ tương phản,
-            giảm ánh sáng xanh có hại. Giúp các bộ chiến sĩ không mỏi mắt khi trực ca dài rà soát hồ sơ.
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed font-mono">
+            Kết nối bảo mật. Dữ liệu đang được đồng bộ hóa với hệ thống trung tâm. Trạng thái bình thường.
           </p>
         </div>
       </div>
@@ -177,56 +176,56 @@ export default function Dashboard({
         {/* Total Facilities Card */}
         <div 
           onClick={() => onSwitchTab('facilities')}
-          className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 hover:border-blue-500/40 transition-all cursor-pointer group hover:-translate-y-0.5 active:translate-y-0"
+          className="bg-cyber-panel border border-cyber-cyan clip-corner p-5 hover:bg-cyber-cyan/10 transition-all cursor-pointer group hover:-translate-y-0.5 active:translate-y-0 glow-box-cyan"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Tổng Cơ Sở Quản Lý</p>
-              <h3 className="text-2xl lg:text-3xl font-extrabold text-blue-100 mt-1">{totalFacilities}</h3>
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">Tổng Cơ Sở Quản Lý</p>
+              <h3 className="text-2xl lg:text-3xl font-mono font-extrabold text-cyber-cyan mt-1 glow-text-cyan">{totalFacilities}</h3>
             </div>
-            <div className="h-10 w-10 bg-blue-950/40 border border-blue-900/50 rounded-xl flex items-center justify-center text-blue-400 group-hover:bg-blue-950/70 transition-colors">
+            <div className="h-10 w-10 bg-cyber-cyan/10 border border-cyber-cyan flex items-center justify-center text-cyber-cyan group-hover:bg-cyber-cyan/30 transition-colors glow-box-cyan">
               <Shield className="h-5 w-5" />
             </div>
           </div>
-          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 select-none">
-            <span className="text-emerald-400 font-bold">100%</span> ổn định trên bản thảo
+          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 font-mono select-none">
+            <span className="text-cyber-cyan font-bold glow-text-cyan">100%</span> Ổn định trên dữ liệu
           </div>
         </div>
 
         {/* Due Facilities Card */}
         <div 
           onClick={() => onSwitchTab('scheduler')}
-          className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 hover:border-orange-500/40 transition-all cursor-pointer group hover:-translate-y-0.5 active:translate-y-0"
+          className="bg-cyber-panel border border-cyber-yellow clip-corner p-5 hover:bg-cyber-yellow/10 transition-all cursor-pointer group hover:-translate-y-0.5 active:translate-y-0 glow-box-yellow"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Cơ Sở Quá/Sắp Hạn KT</p>
-              <h3 className="text-2xl lg:text-3xl font-extrabold text-orange-400 mt-1">{dueFacilitiesCount}</h3>
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">Cơ Sở Quá/Sắp Hạn</p>
+              <h3 className="text-2xl lg:text-3xl font-mono font-extrabold text-cyber-yellow mt-1 glow-text-yellow">{dueFacilitiesCount}</h3>
             </div>
-            <div className="h-10 w-10 bg-orange-950/40 border border-orange-900/50 rounded-xl flex items-center justify-center text-orange-400 group-hover:bg-orange-950/70 transition-colors">
-              <AlertTriangle className="h-5 w-5" />
+            <div className="h-10 w-10 bg-cyber-yellow/10 border border-cyber-yellow flex items-center justify-center text-cyber-yellow group-hover:bg-cyber-yellow/30 transition-colors glow-box-yellow">
+              <AlertTriangle className="h-5 w-5 animate-pulse" />
             </div>
           </div>
-          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 select-none">
-            <span className="text-orange-400 font-bold">Cần rà soát tuyến</span> lập kế hoạch ngay
+          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 font-mono select-none">
+            <span className="text-cyber-yellow font-bold glow-text-yellow">Cần rà soát tuyến</span> lập kế hoạch ngay
           </div>
         </div>
 
         {/* Tasks Card */}
         <div 
           onClick={() => onSwitchTab('tasks')}
-          className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 hover:border-rose-500/40 transition-all cursor-pointer group hover:-translate-y-0.5 active:translate-y-0"
+          className="bg-cyber-panel border border-cyber-magenta clip-corner p-5 hover:bg-cyber-magenta/10 transition-all cursor-pointer group hover:-translate-y-0.5 active:translate-y-0 glow-box-magenta"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Nhiệm Vụ Chưa Xong</p>
-              <h3 className="text-2xl lg:text-3xl font-extrabold text-rose-400 mt-1">{pendingTasks}</h3>
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">Nhiệm Vụ Chưa Xong</p>
+              <h3 className="text-2xl lg:text-3xl font-mono font-extrabold text-cyber-magenta mt-1 glow-text-magenta">{pendingTasks}</h3>
             </div>
-            <div className="h-10 w-10 bg-rose-950/40 border border-rose-900/50 rounded-xl flex items-center justify-center text-rose-400 group-hover:bg-rose-950/70 transition-colors">
+            <div className="h-10 w-10 bg-cyber-magenta/10 border border-cyber-magenta flex items-center justify-center text-cyber-magenta group-hover:bg-cyber-magenta/30 transition-colors glow-box-magenta">
               <ListChecks className="h-5 w-5" />
             </div>
           </div>
-          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 select-none">
+          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 font-mono select-none">
             Phân bổ đều cho các chiến sĩ
           </div>
         </div>
@@ -234,21 +233,21 @@ export default function Dashboard({
         {/* Funds Card */}
         <div 
           onClick={() => onSwitchTab('finance')}
-          className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 hover:border-emerald-500/40 transition-all cursor-pointer group hover:-translate-y-0.5 active:translate-y-0"
+          className="bg-cyber-panel border border-cyber-cyan clip-corner p-5 hover:bg-cyber-cyan/10 transition-all cursor-pointer group hover:-translate-y-0.5 active:translate-y-0 glow-box-cyan"
         >
           <div className="flex items-center justify-between">
             <div className="max-w-[70%]">
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider truncate">Số Tồn Quỹ Tổ</p>
-              <h3 className="text-xl lg:text-2xl font-extrabold text-emerald-400 mt-1 truncate">
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider truncate">Số Tồn Quỹ Tổ</p>
+              <h3 className="text-xl lg:text-2xl font-mono font-extrabold text-cyber-cyan mt-1 truncate glow-text-cyan">
                 {new Intl.NumberFormat('vi-VN').format(fundBalance)} ₫
               </h3>
             </div>
-            <div className="h-10 w-10 bg-emerald-950/40 border border-emerald-900/50 rounded-xl flex items-center justify-center text-emerald-400 group-hover:bg-emerald-950/70 transition-colors flex-shrink-0">
+            <div className="h-10 w-10 bg-cyber-cyan/10 border border-cyber-cyan flex items-center justify-center text-cyber-cyan group-hover:bg-cyber-cyan/30 transition-colors flex-shrink-0 glow-box-cyan">
               <Wallet className="h-5 w-5" />
             </div>
           </div>
-          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 select-none">
-            Quỹ mua sắm cơ sở vật chất đơn vị
+          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 font-mono select-none">
+            Dữ liệu mã hóa mức cao
           </div>
         </div>
       </div>
@@ -256,43 +255,44 @@ export default function Dashboard({
       {/* Main Charts & Key Metrics Row */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* LEFT COLUMN: Clean Custom UI List & Simple Horizontal Bar Chart for Type Distribution (Lightweight, No Overlap) */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-5 lg:col-span-6 space-y-4">
-          <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-            <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <Shield className="h-4 w-4 text-emerald-400" />
-              Cơ Cấu Loại Hình Cơ Sở Quản Lý
+        {/* LEFT COLUMN: Type Distribution */}
+        <div className="bg-cyber-panel border border-cyber-cyan clip-corner p-5 lg:col-span-6 space-y-4 glow-box-cyan relative">
+          <div className="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2 border-cyber-cyan opacity-50 m-2"></div>
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2 border-cyber-cyan opacity-50 m-2"></div>
+          
+          <div className="flex justify-between items-center border-b border-cyber-cyan/30 pb-3">
+            <h3 className="text-sm font-bold text-cyber-cyan uppercase tracking-wider flex items-center gap-2 glow-text-cyan font-mono">
+              <Shield className="h-4 w-4" />
+              Cơ Cấu Loại Hình Cơ Sở
             </h3>
-            <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md font-mono">
-              Phân tích
+            <span className="text-xs text-cyber-cyan bg-cyber-cyan/10 border border-cyber-cyan px-2 py-0.5 font-mono">
+              [ SCANNING ]
             </span>
           </div>
 
           <div className="space-y-4 py-2">
             {Object.keys(typeCounts).length === 0 ? (
-              <p className="text-slate-500 italic text-center py-6 text-xs">Chưa có dữ liệu cơ sở.</p>
+              <p className="text-slate-500 font-mono italic text-center py-6 text-xs">NO DATA FOUND.</p>
             ) : (
               Object.entries(typeCounts).map(([type, count]) => {
                 const percentage = Math.round((count / activeFacilities.length) * 100) || 0;
                 
-                // Muted and relaxing color map
-                let barColor = 'bg-blue-500/80';
-                if (type.toLowerCase().includes('karaoke') || type.toLowerCase().includes('bar')) barColor = 'bg-pink-500/70';
-                else if (type.toLowerCase().includes('xăng') || type.toLowerCase().includes('gas')) barColor = 'bg-rose-500/70';
-                else if (type.toLowerCase().includes('khách sạn') || type.toLowerCase().includes('măng')) barColor = 'bg-purple-500/70';
-                else if (type.toLowerCase().includes('xưởng') || type.toLowerCase().includes('xuất')) barColor = 'bg-yellow-600/75';
-                else if (type.toLowerCase().includes('mầm non') || type.toLowerCase().includes('trường')) barColor = 'bg-teal-500/70';
+                // Cyberpunk colors
+                let barColor = 'bg-cyber-cyan glow-box-cyan';
+                if (type.toLowerCase().includes('karaoke') || type.toLowerCase().includes('bar')) barColor = 'bg-cyber-magenta glow-box-magenta';
+                else if (type.toLowerCase().includes('xăng') || type.toLowerCase().includes('gas')) barColor = 'bg-cyber-yellow glow-box-yellow';
+                else if (type.toLowerCase().includes('khách sạn') || type.toLowerCase().includes('măng')) barColor = 'bg-purple-500 box-shadow-[0_0_10px_purple]';
 
                 return (
                   <div key={type} className="space-y-1">
-                    <div className="flex justify-between items-center text-xs text-slate-300">
-                      <span className="font-medium truncate max-w-[70%]" title={type}>{type}</span>
-                      <span className="font-mono text-slate-400 font-bold">
-                        {count} cơ sở ({percentage}%)
+                    <div className="flex justify-between items-center text-xs text-slate-300 font-mono">
+                      <span className="font-bold truncate max-w-[70%]" title={type}>{type}</span>
+                      <span className="text-cyber-cyan font-bold glow-text-cyan">
+                        {count} ({percentage}%)
                       </span>
                     </div>
-                    <div className="h-2.5 w-full bg-slate-950 rounded-full overflow-hidden">
-                      <div className={`h-full ${barColor} rounded-full transition-all duration-500`} style={{ width: `${percentage}%` }}></div>
+                    <div className="h-2 w-full bg-cyber-dark border border-cyber-cyan/20 overflow-hidden">
+                      <div className={`h-full ${barColor} transition-all duration-500`} style={{ width: `${percentage}%` }}></div>
                     </div>
                   </div>
                 );
@@ -300,62 +300,61 @@ export default function Dashboard({
             )}
           </div>
           
-          <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800 mt-2">
-            <h5 className="text-[11px] font-bold text-amber-500 flex items-center gap-1">
-              ⚠️ Điểm Cần Lưu Ý Ngay:
+          <div className="bg-cyber-yellow/10 p-3 border border-cyber-yellow mt-2">
+            <h5 className="text-[11px] font-bold text-cyber-yellow flex items-center gap-1 font-mono glow-text-yellow">
+              <AlertTriangle className="h-3 w-3" /> CẢNH BÁO HỆ THỐNG:
             </h5>
-            <p className="text-[11px] text-slate-400 line-clamp-2 mt-1">
-              Các hộ kinh doanh có nguy cơ cháy nổ cao (Xăng dầu, Karaoke, Chế biến lâm sản) cần được rà soát định kỳ nghiêm ngặt nhằm tránh các sự cố tai nạn đáng tiếc.
+            <p className="text-[11px] text-cyber-yellow/80 font-mono line-clamp-2 mt-1">
+              Các mục tiêu nguy cơ cao (Xăng dầu, Karaoke) yêu cầu giám sát tăng cường.
             </p>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Professional KPI Table */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl overflow-hidden lg:col-span-6 flex flex-col">
-          <div className="px-5 py-4 border-b border-slate-800 bg-slate-950/30 flex justify-between items-center">
-            <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <ListChecks className="h-4 w-4 text-orange-400" />
-              Đánh Giá Chiến Sĩ & KPI (Bấm gửi Zalo)
+        {/* RIGHT COLUMN: KPI Table */}
+        <div className="bg-cyber-panel border border-cyber-cyan clip-corner overflow-hidden lg:col-span-6 flex flex-col glow-box-cyan relative">
+          <div className="px-5 py-4 border-b border-cyber-cyan/30 bg-cyber-dark flex justify-between items-center">
+            <h3 className="text-sm font-bold font-mono text-cyber-cyan uppercase tracking-wider flex items-center gap-2 glow-text-cyan">
+              <ListChecks className="h-4 w-4" />
+              Hiệu Suất Chỉ Huy (Nhấn để gửi Data)
             </h3>
-            <span className="text-[11px] text-amber-400 bg-amber-950/40 px-2.5 py-0.5 rounded-full font-bold">
-              Công Văn
+            <span className="text-[11px] text-cyber-magenta bg-cyber-magenta/10 border border-cyber-magenta px-2.5 py-0.5 font-bold font-mono glow-text-magenta">
+              [ TRANSMIT ]
             </span>
           </div>
 
-          <div className="overflow-x-auto flex-1">
-            <table className="min-w-full divide-y divide-slate-800 text-xs md:text-sm">
-              <thead className="bg-slate-950/50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-400 uppercase tracking-wider">Thành Viên</th>
-                  <th className="px-3 py-3 text-center font-semibold text-slate-400 uppercase tracking-wider">Sổ Việc</th>
-                  <th className="px-3 py-3 text-center font-semibold text-slate-400 uppercase tracking-wider text-emerald-400">Xong</th>
-                  <th className="px-3 py-3 text-center font-semibold text-slate-400 uppercase tracking-wider text-rose-400">Quá Hạn</th>
-                  <th className="px-4 py-3 text-right font-semibold text-slate-400 uppercase tracking-wider">Tỉ Lệ KPI</th>
+          <div className="overflow-x-auto flex-1 p-2">
+            <table className="min-w-full text-xs md:text-sm font-mono">
+              <thead>
+                <tr className="border-b border-cyber-cyan/20">
+                  <th className="px-4 py-3 text-left font-bold text-cyber-cyan uppercase tracking-wider">Mã Chiến Sĩ</th>
+                  <th className="px-3 py-3 text-center font-bold text-cyber-cyan uppercase tracking-wider">Tổng</th>
+                  <th className="px-3 py-3 text-center font-bold text-cyber-cyan uppercase tracking-wider">OK</th>
+                  <th className="px-3 py-3 text-center font-bold text-cyber-magenta uppercase tracking-wider">Lỗi</th>
+                  <th className="px-4 py-3 text-right font-bold text-cyber-cyan uppercase tracking-wider">Trạng Thái</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 bg-transparent">
+              <tbody>
                 {managerStats.map((st) => (
                   <tr 
                     key={st.name} 
-                    className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    className="hover:bg-cyber-cyan/10 transition-colors group cursor-pointer border-b border-cyber-cyan/10"
                     onClick={() => onRemindUser(st.name)}
-                    title="Bấm để nhắc nhở công việc qua Zalo"
                   >
-                    <td className="px-4 py-3 font-bold text-slate-200 group-hover:text-amber-400 transition-colors flex items-center gap-2">
-                      <span className="h-2 w-2 bg-slate-600 group-hover:bg-amber-400 rounded-full transition-all"></span>
+                    <td className="px-4 py-3 font-bold text-slate-200 group-hover:text-cyber-cyan transition-colors flex items-center gap-2">
+                      <span className="h-2 w-2 bg-cyber-cyan/30 group-hover:bg-cyber-cyan border border-cyber-cyan transition-all glow-box-cyan"></span>
                       {st.name}
-                      <Send className="h-3.5 w-3.5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
+                      <Send className="h-3.5 w-3.5 text-cyber-cyan opacity-0 group-hover:opacity-100 transition-opacity ml-1 glow-text-cyan" />
                     </td>
-                    <td className="px-3 py-3 text-center font-mono text-slate-200 font-semibold">{st.total}</td>
-                    <td className="px-3 py-3 text-center font-mono text-emerald-400 font-bold">{st.completed}</td>
-                    <td className="px-3 py-3 text-center font-mono text-rose-400 font-bold">{st.overdue}</td>
+                    <td className="px-3 py-3 text-center text-slate-300 font-bold">{st.total}</td>
+                    <td className="px-3 py-3 text-center text-cyber-cyan font-bold">{st.completed}</td>
+                    <td className="px-3 py-3 text-center text-cyber-magenta font-bold">{st.overdue}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`font-mono font-bold px-2 py-0.5 rounded ${
+                      <span className={`font-bold px-2 py-0.5 border ${
                         st.kpi >= 80 
-                          ? 'text-emerald-400 bg-emerald-950/30' 
+                          ? 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan glow-text-cyan' 
                           : st.kpi >= 50 
-                            ? 'text-yellow-400 bg-yellow-950/30' 
-                            : 'text-rose-400 bg-rose-950/30'
+                            ? 'text-cyber-yellow bg-cyber-yellow/10 border-cyber-yellow glow-text-yellow' 
+                            : 'text-cyber-magenta bg-cyber-magenta/10 border-cyber-magenta glow-text-magenta'
                       }`}>
                         {st.kpi}%
                       </span>
@@ -366,58 +365,61 @@ export default function Dashboard({
             </table>
           </div>
 
-          <div className="bg-slate-950/20 p-3 border-t border-slate-800 text-slate-400 text-[11px] leading-relaxed">
-            💡 **Mẹo:** Bấm chuột vào tên chiến sĩ bất kỳ để hệ thống tự động soạn tin nhắn, đính kèm các đầu việc còn tồn đọng và trích dẫn trực tiếp tới tài khoản Zalo của họ.
+          <div className="bg-cyber-dark p-3 border-t border-cyber-cyan/30 text-cyber-cyan/70 text-[11px] leading-relaxed font-mono">
+            Nhấp vào bất kỳ mã chiến sĩ nào để kích hoạt luồng truyền tải dữ liệu tự động qua kênh Zalo.
           </div>
         </div>
       </div>
 
-      {/* Urgent Tasks to Complete */}
-      <div className="bg-slate-900/70 border border-slate-800/80 rounded-xl p-5">
-        <h4 className="text-xs font-bold text-slate-200 tracking-wider uppercase mb-4 flex items-center gap-1.5">
-          <AlertTriangle className="h-4 w-4 text-rose-500 animate-pulse" />
-          Việc Gấp Cần Hoàn Thành (Ưu tiên xử lý ngay)
+      {/* Urgent Tasks */}
+      <div className="bg-cyber-panel border border-cyber-magenta clip-corner p-5 glow-box-magenta mt-6 relative">
+        <h4 className="text-xs font-bold font-mono text-cyber-magenta tracking-wider uppercase mb-4 flex items-center gap-2 glow-text-magenta">
+          <AlertTriangle className="h-4 w-4 animate-pulse" />
+          [ CHỈ THỊ KHẨN ] - Ưu Tiên Xử Lý Tối Đa
         </h4>
 
         {urgentItems.length === 0 ? (
-          <p className="text-xs text-slate-400 italic py-2">Tuyệt vời! Không có việc khẩn cấp nào tồn đọng. 🎉</p>
+          <p className="text-xs text-cyber-cyan font-mono italic py-2">Hệ thống sạch. Không có chỉ thị khẩn.</p>
         ) : (
           <div className="space-y-3">
             {urgentItems.slice(0, 10).map((item) => {
-              let iconColor = 'text-rose-400 bg-rose-950/40 border-rose-900/30';
-              let badgeText = 'Công việc quá hạn';
+              let iconColor = 'text-cyber-magenta bg-cyber-magenta/10 border-cyber-magenta glow-box-magenta';
+              let badgeText = 'QUÁ HẠN';
+              let badgeColor = 'text-cyber-magenta border-cyber-magenta glow-text-magenta';
               
               if (item.type === 'unscheduled_inspection') {
-                iconColor = 'text-orange-400 bg-orange-950/40 border-orange-900/30';
-                badgeText = 'Chưa lên lịch kiểm tra';
+                iconColor = 'text-cyber-yellow bg-cyber-yellow/10 border-cyber-yellow glow-box-yellow';
+                badgeText = 'LỖI LỊCH TRÌNH';
+                badgeColor = 'text-cyber-yellow border-cyber-yellow glow-text-yellow';
               } else if (item.type === 'missing_plan') {
-                iconColor = 'text-blue-400 bg-blue-950/40 border-blue-900/30';
-                badgeText = 'Khuyết hồ sơ';
+                iconColor = 'text-cyber-cyan bg-cyber-cyan/10 border-cyber-cyan glow-box-cyan';
+                badgeText = 'LỖI DỮ LIỆU';
+                badgeColor = 'text-cyber-cyan border-cyber-cyan glow-text-cyan';
               }
 
               return (
                 <div 
                   key={item.id} 
-                  className="bg-slate-950/40 border border-slate-850 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:border-slate-800"
+                  className="bg-cyber-dark border border-cyber-magenta/50 hover:border-cyber-magenta clip-corner-reverse p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:bg-cyber-magenta/5"
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`h-9 w-9 border rounded-xl flex items-center justify-center flex-shrink-0 ${iconColor}`}>
+                    <div className={`h-10 w-10 border flex items-center justify-center flex-shrink-0 ${iconColor}`}>
                       {item.type === 'overdue_task' ? (
-                        <Clock className="h-4.5 w-4.5" />
+                        <Clock className="h-5 w-5" />
                       ) : item.type === 'unscheduled_inspection' ? (
-                        <AlertTriangle className="h-4.5 w-4.5" />
+                        <AlertTriangle className="h-5 w-5 animate-pulse" />
                       ) : (
-                        <AlertCircle className="h-4.5 w-4.5" />
+                        <AlertCircle className="h-5 w-5" />
                       )}
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-xs md:text-sm text-slate-200">{item.title}</span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-mono ${iconColor}`}>
-                          {badgeText}
+                        <span className="font-bold font-mono text-xs md:text-sm text-slate-200">{item.title}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 border uppercase font-mono ${badgeColor}`}>
+                          [ {badgeText} ]
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">{item.description}</p>
+                      <p className="text-xs text-slate-400 font-mono mt-1 leading-relaxed">{item.description}</p>
                     </div>
                   </div>
 
@@ -426,14 +428,14 @@ export default function Dashboard({
                       <>
                         <button
                           onClick={() => onRemindUser(item.meta.assignee)}
-                          className="px-3 py-1.5 bg-blue-950/30 hover:bg-blue-950/50 border border-blue-900/40 text-blue-400 hover:text-blue-300 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                          className="px-4 py-2 bg-cyber-cyan/10 hover:bg-cyber-cyan/30 border border-cyber-cyan text-cyber-cyan clip-corner text-[10px] font-bold transition flex items-center gap-2 cursor-pointer font-mono glow-box-cyan glow-text-cyan uppercase"
                         >
                           <Send className="h-3.5 w-3.5" />
-                          <span>Nhắc Zalo</span>
+                          <span>TRUYỀN TIN</span>
                         </button>
                         <button
                           onClick={() => onSwitchTab('tasks')}
-                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-lg text-xs font-semibold transition cursor-pointer"
+                          className="px-4 py-2 bg-cyber-dark hover:bg-cyber-cyan/10 border border-cyber-cyan/50 text-cyber-cyan clip-corner text-[10px] font-bold transition cursor-pointer font-mono uppercase"
                         >
                           <span>Xem Kanban ➜</span>
                         </button>
@@ -443,20 +445,20 @@ export default function Dashboard({
                     {item.type === 'unscheduled_inspection' && (
                       <button
                         onClick={() => onSwitchTab('scheduler')}
-                        className="px-3 py-1.5 bg-orange-950/30 hover:bg-orange-950/50 border border-orange-900/40 text-orange-400 hover:text-orange-300 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                        className="px-4 py-2 bg-cyber-yellow/10 hover:bg-cyber-yellow/30 border border-cyber-yellow text-cyber-yellow clip-corner text-[10px] font-bold transition flex items-center gap-2 cursor-pointer font-mono glow-box-yellow glow-text-yellow uppercase"
                       >
                         <ArrowRight className="h-3.5 w-3.5" />
-                        <span>Lên lịch kiểm tra</span>
+                        <span>SỬA LỊCH</span>
                       </button>
                     )}
 
                     {item.type === 'missing_plan' && (
                       <button
                         onClick={() => onSwitchTab('facilities')}
-                        className="px-3 py-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-350 hover:text-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                        className="px-4 py-2 bg-cyber-cyan/10 hover:bg-cyber-cyan/30 border border-cyber-cyan text-cyber-cyan clip-corner text-[10px] font-bold transition flex items-center gap-2 cursor-pointer font-mono glow-box-cyan glow-text-cyan uppercase"
                       >
                         <ArrowRight className="h-3.5 w-3.5" />
-                        <span>Cập nhật số phương án</span>
+                        <span>CẬP NHẬT DATA</span>
                       </button>
                     )}
                   </div>

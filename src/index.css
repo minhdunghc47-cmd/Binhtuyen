@@ -1,29 +1,86 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Chakra Petch", "Space Mono", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-cyber-cyan: #00f3ff;
+  --color-cyber-magenta: #ff003c;
+  --color-cyber-yellow: #fcee0a;
+  --color-cyber-dark: #050510;
+  --color-cyber-panel: #0a0a1a;
 }
 
 body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #050510;
+  color: #00f3ff;
 }
 
-/* Custom Eye safe Low-Contrast scrollbar track */
+/* Scrollbar cyberpunk */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090e1c;
+  background: #050510;
+  border-left: 1px solid rgba(0, 243, 255, 0.1);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 9px;
+  background: #00f3ff;
+  border-radius: 0;
+  box-shadow: 0 0 10px #00f3ff;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #fcee0a;
+  box-shadow: 0 0 15px #fcee0a;
+}
+
+/* Cyberpunk specific FX */
+.bg-grid-cyber {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 243, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 243, 255, 0.07) 1px, transparent 1px);
+}
+
+.scanlines {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0,0,0,0.15) 50%,
+    rgba(0,0,0,0.15)
+  );
+  background-size: 100% 4px;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.glow-text-cyan { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff; }
+.glow-text-magenta { text-shadow: 0 0 5px #ff003c, 0 0 10px #ff003c; }
+.glow-text-yellow { text-shadow: 0 0 5px #fcee0a, 0 0 10px #fcee0a; }
+
+.glow-box-cyan {
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.05);
+  border: 1px solid #00f3ff;
+}
+.glow-box-magenta {
+  box-shadow: 0 0 10px rgba(255, 0, 60, 0.2), inset 0 0 10px rgba(255, 0, 60, 0.05);
+  border: 1px solid #ff003c;
+}
+.glow-box-yellow {
+  box-shadow: 0 0 10px rgba(252, 238, 10, 0.2), inset 0 0 10px rgba(252, 238, 10, 0.05);
+  border: 1px solid #fcee0a;
+}
+
+.clip-corner {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+}
+.clip-corner-reverse {
+  clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px);
 }
