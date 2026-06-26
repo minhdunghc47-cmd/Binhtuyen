@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Facility, Task } from '../types';
+import { Facility, Task, FundTransaction, Project } from '../types';
 import { Bot, X, Send, Settings, Sparkles, CheckCircle } from 'lucide-react';
 import { generateId, MANAGERS } from '../data';
 
@@ -9,6 +9,7 @@ interface AIChatBotProps {
   funds: FundTransaction[];
   projects: Project[];
   onUpdateFacility: (f: Facility) => void;
+  onAddFacility: (f: Facility) => void;
   onDeleteFacility: (id: string) => void;
   onAddTask: (t: Task) => void;
   onDeleteTask: (id: string) => void;
@@ -18,10 +19,12 @@ interface ChatMessage {
   id: string;
   role: 'user' | 'model' | 'system';
   content: string;
+  revertActions?: any[];
+  isReverted?: boolean;
 }
 
 export default function AIChatBot({ 
-  facilities, tasks, funds, projects, onUpdateFacility, onDeleteFacility, onAddTask, onDeleteTask 
+  facilities, tasks, funds, projects, onUpdateFacility, onAddFacility, onDeleteFacility, onAddTask, onDeleteTask 
 }: AIChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
@@ -69,7 +72,7 @@ export default function AIChatBot({
 
   const callGeminiAPI = async (userText: string) => {
     if (!apiKey) {
-      return "LỖI: Vui lòng vào Cài đặt (⚙️) để nhập Gemini API Key trước khi sử dụng.";
+      return { text: "LỖI: Vui lòng vào Cài đặt (⚙️) để nhập Gemini API Key trước khi sử dụng.", revertActions: [] };
     }
 
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -168,26 +171,22 @@ ${statsStr}`;
     };
 
     try {
-      // 1. Tự động tìm model phù hợp nhất được cấp quyền cho API Key này
       const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
       if (!modelsRes.ok) {
-        return `LỖI API KEY: Không thể xác thực API Key. Đảm bảo mã khóa đúng.`;
+        return { text: `LỖI API KEY: Không thể xác thực API Key.`, revertActions: [] };
       }
       
       const modelsData = await modelsRes.json();
       const availableModels = modelsData.models || [];
-      
-      // Lọc các model có chữ gemini và hỗ trợ generateContent
       const validModels = availableModels.filter((m: any) => 
         m.supportedGenerationMethods?.includes('generateContent') && 
         m.name.includes('gemini')
       );
 
       if (validModels.length === 0) {
-        return "LỖI: API Key không được cấp quyền cho bất kỳ model Gemini nào.";
+        return { text: "LỖI: API Key không được cấp quyền cho bất kỳ model Gemini nào.", revertActions: [] };
       }
 
-      // Sắp xếp ưu tiên: pro > flash > các bản khác.
       validModels.sort((a: any, b: any) => {
         if (a.name.includes('pro') && !b.name.includes('pro')) return -1;
         if (!a.name.includes('pro') && b.name.includes('pro')) return 1;
@@ -198,9 +197,8 @@ ${statsStr}`;
       let usedModelName = "";
       let lastError = null;
 
-      // 2. Thử lần lượt các model cho đến khi thành công (tránh lỗi Quota 0)
       for (const model of validModels) {
-        usedModelName = model.name; // ví dụ: "models/gemini-pro"
+        usedModelName = model.name;
         const attemptRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/${usedModelName}:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -208,28 +206,24 @@ ${statsStr}`;
         });
 
         const data = await attemptRes.json();
-        
         if (attemptRes.ok) {
           res = data;
-          break; // Thành công
+          break;
         } else {
-          // Ghi nhận lỗi và thử model tiếp theo
           lastError = data.error?.message || "Lỗi không xác định";
-          // Nếu không phải lỗi quota thì có thể dừng luôn, nhưng cứ thử tiếp cho chắc chắn.
         }
       }
 
       if (!res) {
-        return `LỖI API (Đã thử mọi model khả dụng): ${lastError}`;
+        return { text: `LỖI API: ${lastError}`, revertActions: [] };
       }
 
       const candidate = res.candidates?.[0];
-      if (!candidate) return "Không nhận được phản hồi từ AI.";
+      if (!candidate) return { text: "Không nhận được phản hồi từ AI.", revertActions: [] };
 
       const parts = candidate.content?.parts || [];
-      if (parts.length === 0) return "Không nhận được phản hồi từ AI.";
-
       let finalMessage = "";
+      let revertActions: any[] = [];
 
       for (const part of parts) {
         if (part.text) {
@@ -245,6 +239,7 @@ ${statsStr}`;
             const facility = findFacility(facName);
             if (facility) {
               onUpdateFacility({ ...facility, lastInspectionDate: dateStr });
+              revertActions.push({ type: 'UPDATE_FACILITY', data: facility });
               responseMsg = `✅ Cập nhật ngày kiểm tra cho **${facility.name}** thành ${new Date(dateStr).toLocaleDateString('vi-VN')}.`;
             } else {
               responseMsg = `❌ Không tìm thấy cơ sở "${facName}".`;
@@ -255,7 +250,6 @@ ${statsStr}`;
             const assigneeName = args.assignee;
             const deadline = args.deadline || '';
             const realAssignee = findAssignee(assigneeName);
-            
             const newTask: Task = {
               id: generateId(),
               title,
@@ -265,6 +259,7 @@ ${statsStr}`;
               createdAt: Date.now()
             };
             onAddTask(newTask);
+            revertActions.push({ type: 'DELETE_TASK', data: newTask });
             responseMsg = `✅ Đã tạo nhiệm vụ: **${title}** (Giao cho: **${realAssignee}**).`;
           }
           else if (fnName === "delete_task") {
@@ -272,6 +267,7 @@ ${statsStr}`;
             const taskToDelete = tasks.find(t => t.title.toLowerCase().includes(title));
             if (taskToDelete) {
               onDeleteTask(taskToDelete.id);
+              revertActions.push({ type: 'ADD_TASK', data: taskToDelete });
               responseMsg = `🗑️ Đã xóa công việc: **${taskToDelete.title}**.`;
             } else {
               responseMsg = `❌ Không tìm thấy công việc "${args.title}".`;
@@ -282,6 +278,7 @@ ${statsStr}`;
             const facility = findFacility(facName);
             if (facility) {
               onDeleteFacility(facility.id);
+              revertActions.push({ type: 'ADD_FACILITY', data: facility });
               responseMsg = `🗑️ Đã xóa cơ sở **${facility.name}**.`;
             } else {
               responseMsg = `❌ Không tìm thấy cơ sở "${facName}".`;
@@ -291,12 +288,22 @@ ${statsStr}`;
         }
       }
 
-      return finalMessage.trim() || "AI không đưa ra phản hồi hợp lệ.";
+      return { text: finalMessage.trim() || "AI không đưa ra phản hồi hợp lệ.", revertActions };
 
     } catch (error: any) {
       console.error(error);
-      return `LỖI HỆ THỐNG: ${error.message}`;
+      return { text: `LỖI HỆ THỐNG: ${error.message}`, revertActions: [] };
     }
+  };
+
+  const handleUndo = (msgId: string, actions: any[]) => {
+    actions.forEach(action => {
+      if (action.type === 'ADD_TASK') onAddTask(action.data);
+      if (action.type === 'DELETE_TASK') onDeleteTask(action.data.id);
+      if (action.type === 'UPDATE_FACILITY') onUpdateFacility(action.data);
+      if (action.type === 'ADD_FACILITY') onAddFacility(action.data);
+    });
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isReverted: true } : m));
   };
 
   const handleSend = async () => {
@@ -310,7 +317,12 @@ ${statsStr}`;
     const aiResponse = await callGeminiAPI(userMsg);
     setIsLoading(false);
     
-    setMessages(prev => [...prev, { id: generateId(), role: 'model', content: aiResponse }]);
+    setMessages(prev => [...prev, { 
+      id: generateId(), 
+      role: 'model', 
+      content: aiResponse.text, 
+      revertActions: aiResponse.revertActions 
+    }]);
   };
 
   return (
@@ -368,17 +380,31 @@ ${statsStr}`;
                 key={msg.id} 
                 className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
               >
-                <div 
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                <div className={`rounded-2xl px-4 py-2.5 text-sm ${
                     msg.role === 'user' 
                       ? 'bg-blue-600 text-white rounded-br-none' 
                       : msg.role === 'system'
                         ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-800 rounded-bl-none'
-                        : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700'
-                  }`}
-                >
+                        : 'bg-slate-800 text-slate-300 rounded-bl-none border border-slate-700/50'
+                  }`}>
                   {msg.content.split('**').map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
                 </div>
+                {msg.role === 'model' && msg.revertActions && msg.revertActions.length > 0 && (
+                  <div className="mt-1.5 ml-1">
+                    {msg.isReverted ? (
+                      <span className="text-[10px] text-slate-500 italic flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" /> Đã hoàn tác
+                      </span>
+                    ) : (
+                      <button 
+                        onClick={() => handleUndo(msg.id, msg.revertActions!)}
+                        className="text-[10px] bg-slate-800 hover:bg-slate-700 text-blue-400 px-2.5 py-1 rounded-md transition-colors font-semibold shadow-sm border border-slate-700"
+                      >
+                        ↩ Hoàn tác {msg.revertActions.length} thao tác
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
             

@@ -616,6 +616,7 @@ export default function App() {
         funds={funds}
         projects={projects}
         onUpdateFacility={handleUpdateFacility}
+        onAddFacility={handleAddFacility}
         onDeleteFacility={handleDeleteFacility}
         onAddTask={handleAddTask}
         onDeleteTask={handleDeleteTask}
