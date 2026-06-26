@@ -226,75 +226,72 @@ ${statsStr}`;
       const candidate = res.candidates?.[0];
       if (!candidate) return "Không nhận được phản hồi từ AI.";
 
-      const part = candidate.content?.parts?.[0];
-      
-      if (part && part.functionCall) {
-        const fnName = part.functionCall.name;
-        const args = part.functionCall.args;
-        
-        let responseMsg = "";
+      const parts = candidate.content?.parts || [];
+      if (parts.length === 0) return "Không nhận được phản hồi từ AI.";
 
-        if (fnName === "update_inspection_date") {
-          const facName = args.facilityName;
-          const dateStr = args.date;
-          
-          const facility = findFacility(facName);
-          if (facility) {
-            onUpdateFacility({ ...facility, lastInspectionDate: dateStr });
-            responseMsg = `✅ Đã cập nhật thành công ngày kiểm tra cho cơ sở **${facility.name}** thành ${new Date(dateStr).toLocaleDateString('vi-VN')}.`;
-          } else {
-            responseMsg = `❌ Không tìm thấy cơ sở nào khớp với tên "${facName}" trong cơ sở dữ liệu.`;
+      let finalMessage = "";
+
+      for (const part of parts) {
+        if (part.text) {
+          finalMessage += part.text + "\n";
+        } else if (part.functionCall) {
+          const fnName = part.functionCall.name;
+          const args = part.functionCall.args;
+          let responseMsg = "";
+
+          if (fnName === "update_inspection_date") {
+            const facName = args.facilityName;
+            const dateStr = args.date;
+            const facility = findFacility(facName);
+            if (facility) {
+              onUpdateFacility({ ...facility, lastInspectionDate: dateStr });
+              responseMsg = `✅ Cập nhật ngày kiểm tra cho **${facility.name}** thành ${new Date(dateStr).toLocaleDateString('vi-VN')}.`;
+            } else {
+              responseMsg = `❌ Không tìm thấy cơ sở "${facName}".`;
+            }
+          } 
+          else if (fnName === "create_task") {
+            const title = args.title;
+            const assigneeName = args.assignee;
+            const deadline = args.deadline || '';
+            const realAssignee = findAssignee(assigneeName);
+            
+            const newTask: Task = {
+              id: generateId(),
+              title,
+              assignee: realAssignee,
+              deadline,
+              isCompleted: false,
+              createdAt: Date.now()
+            };
+            onAddTask(newTask);
+            responseMsg = `✅ Đã tạo nhiệm vụ: **${title}** (Giao cho: **${realAssignee}**).`;
           }
-        } 
-        else if (fnName === "create_task") {
-          const title = args.title;
-          const assigneeName = args.assignee;
-          const deadline = args.deadline || '';
-          
-          const realAssignee = findAssignee(assigneeName);
-          
-          const newTask: Task = {
-            id: generateId(),
-            title,
-            assignee: realAssignee,
-            deadline,
-            isCompleted: false,
-            createdAt: Date.now()
-          };
-          onAddTask(newTask);
-          responseMsg = `✅ Đã tạo nhiệm vụ: **${title}** và giao cho **${realAssignee}**${deadline ? ` (Hạn: ${new Date(deadline).toLocaleDateString('vi-VN')})` : ''}.`;
-        }
-        else if (fnName === "delete_task") {
-          const title = args.title.toLowerCase().trim();
-          const taskToDelete = tasks.find(t => t.title.toLowerCase().includes(title));
-          
-          if (taskToDelete) {
-            onDeleteTask(taskToDelete.id);
-            responseMsg = `🗑️ Đã xóa công việc: **${taskToDelete.title}** thành công.`;
-          } else {
-            responseMsg = `❌ Không tìm thấy công việc nào có tên giống "${args.title}" để xóa.`;
+          else if (fnName === "delete_task") {
+            const title = args.title.toLowerCase().trim();
+            const taskToDelete = tasks.find(t => t.title.toLowerCase().includes(title));
+            if (taskToDelete) {
+              onDeleteTask(taskToDelete.id);
+              responseMsg = `🗑️ Đã xóa công việc: **${taskToDelete.title}**.`;
+            } else {
+              responseMsg = `❌ Không tìm thấy công việc "${args.title}".`;
+            }
           }
-        }
-        else if (fnName === "delete_facility") {
-          const facName = args.facilityName;
-          const facility = findFacility(facName);
-          
-          if (facility) {
-            onDeleteFacility(facility.id);
-            responseMsg = `🗑️ Đã xóa cơ sở **${facility.name}** khỏi hệ thống.`;
-          } else {
-            responseMsg = `❌ Không tìm thấy cơ sở nào tên "${facName}" để xóa.`;
+          else if (fnName === "delete_facility") {
+            const facName = args.facilityName;
+            const facility = findFacility(facName);
+            if (facility) {
+              onDeleteFacility(facility.id);
+              responseMsg = `🗑️ Đã xóa cơ sở **${facility.name}**.`;
+            } else {
+              responseMsg = `❌ Không tìm thấy cơ sở "${facName}".`;
+            }
           }
+          finalMessage += responseMsg + "\n";
         }
-        
-        return responseMsg;
-      }
-      
-      if (part && part.text) {
-        return part.text;
       }
 
-      return "AI không đưa ra phản hồi hợp lệ.";
+      return finalMessage.trim() || "AI không đưa ra phản hồi hợp lệ.";
 
     } catch (error: any) {
       console.error(error);
