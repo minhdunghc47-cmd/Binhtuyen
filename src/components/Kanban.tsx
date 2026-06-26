@@ -215,23 +215,23 @@ export default function Kanban({
   return (
     <div className="space-y-4">
       {/* Top Controls Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-cyber-panel border-l-4 border-cyber-magenta p-4 clip-corner glow-box-magenta">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold font-mono text-cyber-magenta flex items-center gap-2 glow-text-magenta uppercase">
-            <ListTodo className="h-5 w-5" />
-            [ KANBAN ] CHỈ THỊ NHIỆM VỤ
+          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+            <ListTodo className="h-5 w-5 text-orange-400" />
+            Bảng Quản Trị Phân Công Nhiệm Vụ (Kanban)
           </h2>
-          <p className="text-xs text-cyber-magenta/70 font-mono mt-1 uppercase">
-            Mạng lưới giao việc / Báo cáo tự động hóa.
+          <p className="text-xs text-slate-400 mt-1">
+            Theo dõi phân công, đôn đốc tiến độ, đo hiệu suất KPI của các chiến sĩ Tổ Bình Tuyền.
           </p>
         </div>
 
         <button
           onClick={() => openFormModal()}
-          className="self-start md:self-auto px-4 py-2 bg-cyber-cyan/10 hover:bg-cyber-cyan/30 text-cyber-cyan border border-cyber-cyan clip-corner text-xs md:text-sm font-bold flex items-center gap-1.5 glow-box-cyan glow-text-cyan transition-all font-mono uppercase"
+          className="self-start md:self-auto px-4 py-2 bg-blue-650/90 hover:bg-blue-600 text-white rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow"
         >
           <Plus className="h-4 w-4" />
-          <span>[+] PHÂN CÔNG MỚI</span>
+          <span>Ra lệnh giao việc</span>
         </button>
       </div>
 
@@ -267,22 +267,22 @@ export default function Kanban({
       </div>
 
       {/* Columns Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start pb-4 min-h-[calc(100vh-280px)] mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start pb-4 min-h-[calc(100vh-280px)]">
         {statusColumns.map((col) => (
           <div 
             key={col.id} 
             onDragOver={(e) => handleDragOver(e, col.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, col.id)}
-            className={`bg-cyber-dark border clip-corner p-3 flex flex-col h-full space-y-3.5 transition-all duration-200 ${
+            className={`${col.panelBg} border rounded-xl p-3 flex flex-col h-full space-y-3.5 transition-all duration-200 ${
               draggedOverCol === col.id 
-                ? 'border-cyber-cyan bg-cyber-cyan/10 glow-box-cyan scale-[1.01]' 
-                : 'border-cyber-cyan/30'
+                ? 'border-amber-500 bg-[#1e2335]/40 shadow-[0_0_15px_rgba(245,158,11,0.15)] scale-[1.01]' 
+                : 'border-slate-805/50'
             }`}
           >
             {/* Column Header */}
-            <div className="flex justify-between items-center border-b border-cyber-cyan/30 pb-2 min-h-8">
-              <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-cyber-cyan glow-text-cyan uppercase">
+            <div className="flex justify-between items-center border-b border-slate-800/65 pb-2 min-h-8">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-350">
                 {col.icon}
                 <span>{col.title}</span>
               </div>
@@ -305,7 +305,7 @@ export default function Kanban({
                       key={`${t.id}-${idx}`} 
                       draggable={true}
                       onDragStart={(e) => handleDragStart(e, t.id)}
-                      className={`group bg-cyber-panel border border-cyber-cyan/50 clip-corner p-3.5 border-l-4 ${col.borderColor} hover:border-cyber-cyan transition-all cursor-grab active:cursor-grabbing hover:scale-[1.01] hover:glow-box-cyan`}
+                      className={`group bg-slate-900 border border-slate-800 rounded-lg p-3.5 shadow-sm border-l-4 ${col.borderColor} hover:border-slate-750 transition-all cursor-grab active:cursor-grabbing hover:scale-[1.01]`}
                     >
                       <h4 className={`text-xs md:text-sm font-semibold text-slate-200 leading-relaxed ${
                         t.isCompleted ? 'line-through opacity-40' : ''

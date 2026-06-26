@@ -329,20 +329,19 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-cyber-dark text-cyber-cyan font-sans relative">
-      <div className="scanlines"></div>
+    <div className="flex h-screen w-full overflow-hidden bg-[#0a0f1d] text-slate-300 font-sans">
       
-      {/* 1. LEFT SIDEBAR: Cyberpunk Navigation */}
-      <aside className="w-64 bg-cyber-panel border-r border-cyber-cyan glow-box-cyan flex flex-col justify-between hidden md:flex flex-shrink-0 select-none z-10">
+      {/* 1. LEFT SIDEBAR: Elegant corporate navigation built for eye comfort */}
+      <aside className="w-64 bg-[#0e1424] border-r border-slate-900 flex flex-col justify-between hidden md:flex flex-shrink-0 select-none">
         <div>
           {/* Logo Brand Header */}
-          <div className="h-16 flex items-center px-6 gap-3 bg-cyan-950/30 border-b border-cyber-cyan clip-corner-reverse m-2">
-            <div className="h-9 w-9 bg-cyber-cyan/10 border border-cyber-cyan flex items-center justify-center text-cyber-cyan glow-box-cyan">
-              <Flame className="h-5 w-5 animate-pulse glow-text-cyan" />
+          <div className="h-16 flex items-center px-6 gap-3 bg-emerald-950/40 border-b border-slate-900">
+            <div className="h-9 w-9 bg-emerald-600/10 border border-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-500 shadow-inner">
+              <Flame className="h-5 w-5 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-sm font-black tracking-wider text-cyber-cyan uppercase glow-text-cyan">Tổ Bình Tuyền</h1>
-              <p className="text-[10px] text-cyber-yellow font-mono font-extrabold uppercase tracking-widest mt-0.5 glow-text-yellow">PCCC & CNCH</p>
+              <h1 className="text-sm font-black tracking-wider text-slate-100 uppercase">Tổ Bình Tuyền</h1>
+              <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mt-0.5">PCCC & CNCH</p>
             </div>
           </div>
 
@@ -357,8 +356,8 @@ export default function App() {
                   onClick={() => { setActiveTab('dashboard'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'dashboard'
-                      ? 'bg-cyber-cyan/20 border-l-[3px] border-cyber-cyan text-cyber-cyan font-bold glow-box-cyan clip-corner glow-text-cyan'
-                      : 'border-l-[3px] border-transparent text-slate-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10 hover:glow-text-cyan transition-all'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
+                      : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
                   <LayoutDashboard className="h-4 w-4" />
@@ -369,8 +368,8 @@ export default function App() {
                   onClick={() => { setActiveTab('facilities'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'facilities'
-                      ? 'bg-cyber-cyan/20 border-l-[3px] border-cyber-cyan text-cyber-cyan font-bold glow-box-cyan clip-corner glow-text-cyan'
-                      : 'border-l-[3px] border-transparent text-slate-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10 hover:glow-text-cyan transition-all'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
+                      : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
                   <Building2 className="h-4 w-4" />
@@ -381,8 +380,8 @@ export default function App() {
                   onClick={() => { setActiveTab('scheduler'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'scheduler'
-                      ? 'bg-cyber-cyan/20 border-l-[3px] border-cyber-cyan text-cyber-cyan font-bold glow-box-cyan clip-corner glow-text-cyan'
-                      : 'border-l-[3px] border-transparent text-slate-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10 hover:glow-text-cyan transition-all'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
+                      : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
                   <CalendarRange className="h-4 w-4" />
@@ -393,8 +392,8 @@ export default function App() {
                   onClick={() => { setActiveTab('tasks'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'tasks'
-                      ? 'bg-cyber-cyan/20 border-l-[3px] border-cyber-cyan text-cyber-cyan font-bold glow-box-cyan clip-corner glow-text-cyan'
-                      : 'border-l-[3px] border-transparent text-slate-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10 hover:glow-text-cyan transition-all'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
+                      : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
                   <KanbanSquare className="h-4 w-4" />
@@ -405,8 +404,8 @@ export default function App() {
                   onClick={() => { setActiveTab('notebook'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'notebook'
-                      ? 'bg-cyber-cyan/20 border-l-[3px] border-cyber-cyan text-cyber-cyan font-bold glow-box-cyan clip-corner glow-text-cyan'
-                      : 'border-l-[3px] border-transparent text-slate-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10 hover:glow-text-cyan transition-all'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
+                      : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
                   <BookOpen className="h-4 w-4" />
@@ -424,8 +423,8 @@ export default function App() {
                   onClick={() => { setActiveTab('finance'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'finance'
-                      ? 'bg-cyber-cyan/20 border-l-[3px] border-cyber-cyan text-cyber-cyan font-bold glow-box-cyan clip-corner glow-text-cyan'
-                      : 'border-l-[3px] border-transparent text-slate-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10 hover:glow-text-cyan transition-all'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
+                      : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
                   <WalletCards className="h-4 w-4" />
@@ -436,8 +435,8 @@ export default function App() {
                   onClick={() => { setActiveTab('projects'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'projects'
-                      ? 'bg-cyber-cyan/20 border-l-[3px] border-cyber-cyan text-cyber-cyan font-bold glow-box-cyan clip-corner glow-text-cyan'
-                      : 'border-l-[3px] border-transparent text-slate-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10 hover:glow-text-cyan transition-all'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
+                      : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
                   <Hammer className="h-4 w-4" />
@@ -449,15 +448,15 @@ export default function App() {
         </div>
 
         {/* Bottom cloud indicator */}
-        <div className="p-4 border-t border-cyber-cyan bg-cyber-panel">
-          <div className="bg-cyber-dark border border-cyber-cyan clip-corner p-3 space-y-2 glow-box-cyan">
+        <div className="p-4 border-t border-slate-900 bg-slate-950/20">
+          <div className="bg-slate-900 border border-slate-850 rounded-xl p-3 space-y-2">
             <div className="flex items-center gap-2 text-xs">
-              <span className={`h-2.5 w-2.5 rounded-none ${isSyncing ? 'bg-cyber-yellow animate-spin' : 'bg-cyber-cyan'} flex-shrink-0 glow-box-cyan`}></span>
-              <span className="font-bold text-cyber-cyan font-mono truncate">{syncMessage}</span>
+              <span className={`h-2.5 w-2.5 rounded-full ${isSyncing ? 'bg-amber-400 animate-spin' : 'bg-emerald-500'} flex-shrink-0`}></span>
+              <span className="font-bold text-slate-400 truncate">{syncMessage}</span>
             </div>
             <button
               onClick={handleForceSheetsSync}
-              className="w-full py-1 text-[10px] bg-cyber-dark border border-cyber-yellow text-cyber-yellow hover:bg-cyber-yellow/20 font-mono font-extrabold uppercase clip-corner transition-all glow-text-yellow"
+              className="w-full py-1 text-[10px] bg-slate-950 border border-slate-800 hover:border-slate-700 font-extrabold text-blue-400 hover:text-blue-300 rounded transition uppercase"
             >
               Sao Lưu Sheets
             </button>
@@ -466,10 +465,10 @@ export default function App() {
       </aside>
 
       {/* 2. MAIN SCREEN BODY */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-cyber-dark bg-grid-cyber z-0 relative">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#0A0D15]">
         
         {/* TOP MOBILE HEADER & STATUS BAR */}
-        <header className="h-16 border-b border-cyber-cyan bg-cyber-panel/90 backdrop-blur-md flex items-center px-4 md:px-6 justify-between select-none flex-shrink-0 glow-box-cyan z-10">
+        <header className="h-16 border-b border-slate-900 bg-[#0e1424] flex items-center px-4 md:px-6 justify-between select-none flex-shrink-0">
           <div className="flex items-center gap-3">
             {/* Hamburger for mobile screens */}
             <button
@@ -486,10 +485,10 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* HUD Status */}
-            <div className="flex items-center gap-1.5 bg-cyber-magenta/10 border border-cyber-magenta text-[10px] font-bold text-cyber-magenta px-3 py-1 clip-corner glow-box-magenta font-mono uppercase tracking-widest">
-              <Eye className="h-3.5 w-3.5 animate-pulse" />
-              <span className="hidden sm:inline glow-text-magenta">HỆ THỐNG TRỰC CHIẾN KÍCH HOẠT</span>
+            {/* Eye Protection warning lights */}
+            <div className="flex items-center gap-1.5 bg-emerald-950/25 border border-emerald-900/40 text-[10px] font-bold text-emerald-400 px-3 py-1 rounded-full">
+              <Eye className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Chế độ dịu nhẹ cho mắt đang hoạt động</span>
             </div>
           </div>
         </header>
@@ -561,22 +560,22 @@ export default function App() {
 
       {/* 3. MOBILE SIDEBAR NAVIGATION DRAWER */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden bg-cyber-dark/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex md:hidden bg-slate-950/70 backdrop-blur-sm">
           <div 
-            className="fixed inset-0 scanlines" 
+            className="fixed inset-0" 
             onClick={() => setMobileMenuOpen(false)}
           ></div>
           
-          <div className="relative flex-1 flex flex-col max-w-[280px] w-full bg-cyber-panel h-full border-r border-cyber-cyan glow-box-cyan">
+          <div className="relative flex-1 flex flex-col max-w-[280px] w-full bg-[#0e1424] h-full border-r border-slate-900">
             {/* Header drawer */}
-            <div className="h-16 bg-cyan-950/30 px-5 flex items-center justify-between border-b border-cyber-cyan">
+            <div className="h-16 bg-emerald-950/40 px-5 flex items-center justify-between border-b border-slate-900">
               <div className="flex items-center gap-2">
-                <Flame className="h-5 w-5 text-cyber-cyan glow-text-cyan animate-pulse" />
-                <span className="font-extrabold text-cyber-cyan text-sm tracking-wider uppercase glow-text-cyan">PCCC Bình Tuyền</span>
+                <Flame className="h-5 w-5 text-emerald-500" />
+                <span className="font-extrabold text-slate-200 text-sm tracking-wider uppercase">PCCC Bình Tuyền</span>
               </div>
               <button 
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1 px-2 border border-cyber-magenta bg-cyber-dark text-cyber-magenta clip-corner glow-box-magenta hover:bg-cyber-magenta/20 transition-all"
+                className="p-1 px-2 border border-slate-800 rounded bg-slate-900 text-slate-400"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -604,10 +603,10 @@ export default function App() {
                         setActiveTab(m.id);
                         setMobileMenuOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 p-2.5 rounded-none text-xs font-semibold transition-all ${
+                      className={`w-full flex items-center gap-3 p-2.5 rounded-lg text-xs font-semibold ${
                         activeTab === m.id
-                          ? 'bg-cyber-cyan/20 text-cyber-cyan border-l-[3px] border-cyber-cyan font-bold glow-box-cyan glow-text-cyan clip-corner'
-                          : 'text-slate-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-l-[3px] border-emerald-500 font-bold'
+                          : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       {React.cloneElement(m.icon, { className: 'h-4 w-4' })}
@@ -618,13 +617,16 @@ export default function App() {
               </div>
             </div>
 
-            {/* Footer drawer */}
-            <div className="p-4 border-t border-cyber-cyan bg-cyber-panel">
-              <button 
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-2 bg-cyber-dark hover:bg-cyber-cyan/20 border border-cyber-cyan text-xs font-bold text-cyber-cyan clip-corner glow-box-cyan glow-text-cyan transition-all"
+            {/* Clear sync button inside mobile drawer */}
+            <div className="p-4 border-t border-slate-900">
+              <button
+                onClick={() => {
+                  handleForceSheetsSync();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-bold text-blue-400 rounded-lg"
               >
-                ĐÓNG MENU (X)
+                Đồng Bộ Lên Sheets
               </button>
             </div>
           </div>
