@@ -619,8 +619,11 @@ export default function App() {
       {/* 4. AI CHATBOT WIDGET */}
       <AIChatBot 
         facilities={facilities} 
+        tasks={tasks}
         onUpdateFacility={handleUpdateFacility}
+        onDeleteFacility={handleDeleteFacility}
         onAddTask={handleAddTask}
+        onDeleteTask={handleDeleteTask}
       />
     </div>
   );

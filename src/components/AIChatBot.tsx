@@ -5,8 +5,11 @@ import { generateId, MANAGERS } from '../data';
 
 interface AIChatBotProps {
   facilities: Facility[];
+  tasks: Task[];
   onUpdateFacility: (f: Facility) => void;
+  onDeleteFacility: (id: string) => void;
   onAddTask: (t: Task) => void;
+  onDeleteTask: (id: string) => void;
 }
 
 interface ChatMessage {
@@ -15,7 +18,9 @@ interface ChatMessage {
   content: string;
 }
 
-export default function AIChatBot({ facilities, onUpdateFacility, onAddTask }: AIChatBotProps) {
+export default function AIChatBot({ 
+  facilities, tasks, onUpdateFacility, onDeleteFacility, onAddTask, onDeleteTask 
+}: AIChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -106,6 +111,28 @@ Chỉ gọi công cụ khi cần thiết. Nếu người dùng ra lệnh, hãy g
                   deadline: { type: "STRING", description: "Hạn chót, định dạng YYYY-MM-DD. Nếu không rõ thì để trống." }
                 },
                 required: ["title", "assignee"]
+              }
+            },
+            {
+              name: "delete_task",
+              description: "Xóa một nhiệm vụ/công việc",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  title: { type: "STRING", description: "Tên hoặc mô tả ngắn của công việc cần xóa" }
+                },
+                required: ["title"]
+              }
+            },
+            {
+              name: "delete_facility",
+              description: "Xóa một cơ sở khỏi hệ thống PCCC",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  facilityName: { type: "STRING", description: "Tên cơ sở cần xóa" }
+                },
+                required: ["facilityName"]
               }
             }
           ]
@@ -212,6 +239,28 @@ Chỉ gọi công cụ khi cần thiết. Nếu người dùng ra lệnh, hãy g
           };
           onAddTask(newTask);
           responseMsg = `✅ Đã tạo nhiệm vụ: **${title}** và giao cho **${realAssignee}**${deadline ? ` (Hạn: ${new Date(deadline).toLocaleDateString('vi-VN')})` : ''}.`;
+        }
+        else if (fnName === "delete_task") {
+          const title = args.title.toLowerCase().trim();
+          const taskToDelete = tasks.find(t => t.title.toLowerCase().includes(title));
+          
+          if (taskToDelete) {
+            onDeleteTask(taskToDelete.id);
+            responseMsg = `🗑️ Đã xóa công việc: **${taskToDelete.title}** thành công.`;
+          } else {
+            responseMsg = `❌ Không tìm thấy công việc nào có tên giống "${args.title}" để xóa.`;
+          }
+        }
+        else if (fnName === "delete_facility") {
+          const facName = args.facilityName;
+          const facility = findFacility(facName);
+          
+          if (facility) {
+            onDeleteFacility(facility.id);
+            responseMsg = `🗑️ Đã xóa cơ sở **${facility.name}** khỏi hệ thống.`;
+          } else {
+            responseMsg = `❌ Không tìm thấy cơ sở nào tên "${facName}" để xóa.`;
+          }
         }
         
         return responseMsg;
