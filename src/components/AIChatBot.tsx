@@ -114,23 +114,63 @@ Chỉ gọi công cụ khi cần thiết. Nếu người dùng ra lệnh, hãy g
       toolConfig: {
         functionCallingConfig: { mode: "AUTO" }
       }
-    };
-
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
+      // 1. Tự động tìm model phù hợp nhất được cấp quyền cho API Key này
+      const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      if (!modelsRes.ok) {
+        return `LỖI API KEY: Không thể xác thực API Key. Đảm bảo mã khóa đúng.`;
+      }
+      
+      const modelsData = await modelsRes.json();
+      const availableModels = modelsData.models || [];
+      
+      // Lọc các model có chữ gemini và hỗ trợ generateContent
+      const validModels = availableModels.filter((m: any) => 
+        m.supportedGenerationMethods?.includes('generateContent') && 
+        m.name.includes('gemini')
+      );
 
-      if (!res.ok) {
-        const err = await res.json();
-        console.error("Gemini API Error:", err);
-        return `LỖI API: ${err.error?.message || 'Không thể kết nối tới Gemini'}`;
+      if (validModels.length === 0) {
+        return "LỖI: API Key không được cấp quyền cho bất kỳ model Gemini nào.";
       }
 
-      const data = await res.json();
-      const candidate = data.candidates?.[0];
+      // Sắp xếp ưu tiên: pro > flash > các bản khác.
+      validModels.sort((a: any, b: any) => {
+        if (a.name.includes('pro') && !b.name.includes('pro')) return -1;
+        if (!a.name.includes('pro') && b.name.includes('pro')) return 1;
+        return 0;
+      });
+
+      let res = null;
+      let usedModelName = "";
+      let lastError = null;
+
+      // 2. Thử lần lượt các model cho đến khi thành công (tránh lỗi Quota 0)
+      for (const model of validModels) {
+        usedModelName = model.name; // ví dụ: "models/gemini-pro"
+        const attemptRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/${usedModelName}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+
+        const data = await attemptRes.json();
+        
+        if (attemptRes.ok) {
+          res = data;
+          break; // Thành công
+        } else {
+          // Ghi nhận lỗi và thử model tiếp theo
+          lastError = data.error?.message || "Lỗi không xác định";
+          // Nếu không phải lỗi quota thì có thể dừng luôn, nhưng cứ thử tiếp cho chắc chắn.
+        }
+      }
+
+      if (!res) {
+        return `LỖI API (Đã thử mọi model khả dụng): ${lastError}`;
+      }
+
+      const candidate = res.candidates?.[0];
       if (!candidate) return "Không nhận được phản hồi từ AI.";
 
       const part = candidate.content?.parts?.[0];
