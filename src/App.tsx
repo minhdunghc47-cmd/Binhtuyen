@@ -335,8 +335,8 @@ export default function App() {
       <aside className="w-64 bg-[#0e1424] border-r border-slate-900 flex flex-col justify-between hidden md:flex flex-shrink-0 select-none">
         <div>
           {/* Logo Brand Header */}
-          <div className="h-16 flex items-center px-6 gap-3 bg-red-950/40 border-b border-slate-900">
-            <div className="h-9 w-9 bg-red-600/10 border border-red-500/20 rounded-xl flex items-center justify-center text-red-500 shadow-inner">
+          <div className="h-16 flex items-center px-6 gap-3 bg-emerald-950/40 border-b border-slate-900">
+            <div className="h-9 w-9 bg-emerald-600/10 border border-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-500 shadow-inner">
               <Flame className="h-5 w-5 animate-pulse" />
             </div>
             <div>
@@ -356,7 +356,7 @@ export default function App() {
                   onClick={() => { setActiveTab('dashboard'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'dashboard'
-                      ? 'bg-red-550/10 border-l-[3px] border-red-500 text-red-400 font-bold bg-[#171d31]'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
                       : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
@@ -368,7 +368,7 @@ export default function App() {
                   onClick={() => { setActiveTab('facilities'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'facilities'
-                      ? 'bg-red-550/10 border-l-[3px] border-red-500 text-red-400 font-bold bg-[#171d31]'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
                       : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
@@ -380,7 +380,7 @@ export default function App() {
                   onClick={() => { setActiveTab('scheduler'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'scheduler'
-                      ? 'bg-red-550/10 border-l-[3px] border-red-500 text-red-400 font-bold bg-[#171d31]'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
                       : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
@@ -392,7 +392,7 @@ export default function App() {
                   onClick={() => { setActiveTab('tasks'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'tasks'
-                      ? 'bg-red-550/10 border-l-[3px] border-red-500 text-red-400 font-bold bg-[#171d31]'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
                       : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
@@ -404,7 +404,7 @@ export default function App() {
                   onClick={() => { setActiveTab('notebook'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'notebook'
-                      ? 'bg-red-550/10 border-l-[3px] border-red-500 text-red-400 font-bold bg-[#171d31]'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
                       : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
@@ -423,7 +423,7 @@ export default function App() {
                   onClick={() => { setActiveTab('finance'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'finance'
-                      ? 'bg-red-550/10 border-l-[3px] border-red-500 text-red-400 font-bold bg-[#171d31]'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
                       : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
@@ -435,7 +435,7 @@ export default function App() {
                   onClick={() => { setActiveTab('projects'); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                     activeTab === 'projects'
-                      ? 'bg-red-550/10 border-l-[3px] border-red-500 text-red-400 font-bold bg-[#171d31]'
+                      ? 'bg-emerald-500/10 border-l-[3px] border-emerald-500 text-emerald-400 font-bold bg-[#171d31]'
                       : 'border-l-[3px] border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                   }`}
                 >
@@ -568,9 +568,9 @@ export default function App() {
           
           <div className="relative flex-1 flex flex-col max-w-[280px] w-full bg-[#0e1424] h-full border-r border-slate-900">
             {/* Header drawer */}
-            <div className="h-16 bg-red-950/40 px-5 flex items-center justify-between border-b border-slate-900">
+            <div className="h-16 bg-emerald-950/40 px-5 flex items-center justify-between border-b border-slate-900">
               <div className="flex items-center gap-2">
-                <Flame className="h-5 w-5 text-red-500" />
+                <Flame className="h-5 w-5 text-emerald-500" />
                 <span className="font-extrabold text-slate-200 text-sm tracking-wider uppercase">PCCC Bình Tuyền</span>
               </div>
               <button 
@@ -605,7 +605,7 @@ export default function App() {
                       }}
                       className={`w-full flex items-center gap-3 p-2.5 rounded-lg text-xs font-semibold ${
                         activeTab === m.id
-                          ? 'bg-red-550/10 text-red-400 border-l-[3px] border-red-500 font-bold'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-l-[3px] border-emerald-500 font-bold'
                           : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
