@@ -28,7 +28,7 @@ export async function fetchFromFirebase(colRef: any) {
       .map(doc => doc.data());
   } catch (err) {
     console.error('Error fetching from Firebase:', err);
-    return [];
+    throw err;
   }
 }
 
