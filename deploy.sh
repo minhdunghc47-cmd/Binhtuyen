@@ -30,7 +30,11 @@ fi
 # 3. Gom và Commit thay đổi
 echo -e "${BLUE}Đang chuẩn bị đóng gói các file sửa đổi...${NC}"
 git add .
-commit_msg="Nâng cấp Kanban kéo thả và tích hợp NotebookLM [$(date '+%Y-%m-%d %H:%M:%S')]"
+if [ -n "$1" ]; then
+  commit_msg="$1 [$(date '+%Y-%m-%d %H:%M:%S')]"
+else
+  commit_msg="Cập nhật ứng dụng PCCC [$(date '+%Y-%m-%d %H:%M:%S')]"
+fi
 git commit -m "$commit_msg"
 echo -e "${GREEN}✓ Đã ghi nhận thay đổi cục bộ thành công!${NC}"
 
