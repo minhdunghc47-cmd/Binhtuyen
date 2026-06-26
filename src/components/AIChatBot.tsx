@@ -75,6 +75,7 @@ export default function AIChatBot({
     const todayStr = new Date().toISOString().slice(0, 10);
     const balance = funds.reduce((acc, f) => f.type === 'thu' ? acc + f.amount : acc - f.amount, 0);
     const completedTasks = tasks.filter(t => t.isCompleted).length;
+    const taskDetails = tasks.map(t => `- ${t.title} (${t.assignee}, ${t.isCompleted ? 'Xong' : 'Đang xử lý'})`).join('\n');
     
     const statsStr = `
 *** DỮ LIỆU BÁO CÁO HIỆN TẠI TỪ HỆ THỐNG ***
@@ -83,14 +84,16 @@ export default function AIChatBot({
 - Số cơ sở Nhóm 2: ${facilities.filter(f => f.group === 'Nhóm 2').length}
 - Tổng quỹ Đội hiện tại: ${balance.toLocaleString('vi-VN')} VNĐ
 - Tổng số dự án thi công: ${projects.length}
-- Tình trạng công việc: ${completedTasks}/${tasks.length} đã hoàn thành
 - Các cán bộ quản lý: ${MANAGERS.join(', ')}
+
+*** DANH SÁCH ${tasks.length} CÔNG VIỆC HIỆN TẠI ***
+${taskDetails || 'Chưa có công việc nào.'}
 ********************************************
 `;
 
     const systemPrompt = `Bạn là trợ lý AI quản lý PCCC tên là Trợ lý Bình Tuyền. Hôm nay là ngày ${todayStr}.
 Nhiệm vụ của bạn là lắng nghe báo cáo của cán bộ và thực hiện các hành động bằng công cụ (function calling).
-Bạn cũng có thể trả lời các câu hỏi về số liệu dựa trên Bảng Dữ Liệu dưới đây.
+Bạn cũng có thể trả lời các câu hỏi về số liệu, hoặc phân tích công việc trùng lặp dựa trên Bảng Dữ Liệu dưới đây.
 Nếu người dùng hỏi số liệu, hãy lấy từ Bảng Dữ Liệu và trả lời thân thiện, lịch sự.
 Nếu người dùng ra lệnh hành động (tạo việc, cập nhật), hãy gọi công cụ tương ứng, sau đó trả lời ngắn gọn tiếng Việt.
 
@@ -400,7 +403,12 @@ ${statsStr}`;
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
                 placeholder="VD: Cập nhật nhà nghỉ tùng lâm hôm nay"
                 className="flex-1 bg-slate-900 border border-slate-700 rounded-full px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
               />
