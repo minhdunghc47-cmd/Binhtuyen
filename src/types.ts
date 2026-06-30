@@ -36,6 +36,8 @@ export interface Facility {
   trainingHistory: TrainingLog[];
   reportStatus: ReportStatus;
   recordStatus: RecordStatus;
+  report6Months?: boolean;
+  reportAnnual?: boolean;
   createdAt: number;
 }
 

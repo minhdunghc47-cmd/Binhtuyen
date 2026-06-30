@@ -46,7 +46,7 @@ export default function Facilities({
   const [recordStatusFilter, setRecordStatusFilter] = useState<'all_active' | RecordStatus | 'all'>('all_active');
   const [planFilter, setPlanFilter] = useState<'all' | 'has-plan' | 'no-plan'>('all');
   const [sortBy, setSortBy] = useState<'name-asc' | 'name-desc' | 'date-desc' | 'date-asc'>('date-desc');
-  const [activeSubTab, setActiveSubTab] = useState<'all' | 'hoso' | 'phuongan' | 'huanluyen' | 'kiemtra'>('all');
+  const [activeSubTab, setActiveSubTab] = useState<'all' | 'hoso' | 'phuongan' | 'huanluyen' | 'kiemtra' | 'baocao'>('all');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,6 +77,8 @@ export default function Facilities({
   const [reportStatus, setReportStatus] = useState<ReportStatus>('danh_sach_chinh');
   const [recordStatus, setRecordStatus] = useState<RecordStatus>('chua_dang_ky');
   const [trainingHistory, setTrainingHistory] = useState<TrainingLog[]>([]);
+  const [report6Months, setReport6Months] = useState(false);
+  const [reportAnnual, setReportAnnual] = useState(false);
 
   // Sub-form for training logging
   const [trainDate, setTrainDate] = useState('');
@@ -105,6 +107,8 @@ export default function Facilities({
       setReportStatus(fac.reportStatus || 'danh_sach_chinh');
       setRecordStatus(fac.recordStatus || 'hien_hanh');
       setTrainingHistory(fac.trainingHistory || []);
+      setReport6Months(fac.report6Months || false);
+      setReportAnnual(fac.reportAnnual || false);
     } else {
       setEditingFacility(null);
       setName('');
@@ -125,6 +129,8 @@ export default function Facilities({
       setReportStatus('danh_sach_chinh');
       setRecordStatus('chua_dang_ky');
       setTrainingHistory([]);
+      setReport6Months(false);
+      setReportAnnual(false);
     }
     setTrainDate('');
     setTrainAmount('');
@@ -184,6 +190,8 @@ export default function Facilities({
       reportStatus,
       recordStatus,
       trainingHistory,
+      report6Months,
+      reportAnnual,
       createdAt: editingFacility ? editingFacility.createdAt : Date.now(),
     };
 
@@ -510,6 +518,7 @@ export default function Facilities({
             { id: 'phuongan', label: '🔥 Số phương án' },
             { id: 'huanluyen', label: '🎓 Tình trạng huấn luyện' },
             { id: 'kiemtra', label: '🛡️ Tình trạng kiểm tra' },
+            { id: 'baocao', label: '📊 Báo cáo định kỳ' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -576,6 +585,14 @@ export default function Facilities({
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-40">Cán bộ QL / Trực thuộc</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase text-center">Chu kỳ / Ngày KT</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Trạng thái Kiểm tra</th>
+                  </>
+                )}
+
+                {activeSubTab === 'baocao' && (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-40">Cán bộ QL / Trực thuộc</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase">Báo cáo 6 Tháng</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase">Báo cáo Năm</th>
                   </>
                 )}
 
@@ -922,6 +939,38 @@ export default function Facilities({
                         </>
                       )}
 
+                      {/* --- TAB: BÁO CÁO --- */}
+                      {activeSubTab === 'baocao' && (
+                        <>
+                          <td className="px-4 py-4 align-top text-center">
+                            <label className="flex items-center justify-center gap-2 cursor-pointer w-full h-full">
+                              <input
+                                type="checkbox"
+                                checked={!!f.report6Months}
+                                onChange={(e) => handleInlineUpdate(f.id, 'report6Months', e.target.checked)}
+                                className="w-5 h-5 rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-900"
+                              />
+                              <span className={`text-xs font-bold ${f.report6Months ? 'text-blue-400' : 'text-slate-500'}`}>
+                                {f.report6Months ? 'Đã nộp' : 'Chưa nộp'}
+                              </span>
+                            </label>
+                          </td>
+                          <td className="px-4 py-4 align-top text-center">
+                            <label className="flex items-center justify-center gap-2 cursor-pointer w-full h-full">
+                              <input
+                                type="checkbox"
+                                checked={!!f.reportAnnual}
+                                onChange={(e) => handleInlineUpdate(f.id, 'reportAnnual', e.target.checked)}
+                                className="w-5 h-5 rounded border-slate-700 text-purple-600 focus:ring-purple-500 bg-slate-900"
+                              />
+                              <span className={`text-xs font-bold ${f.reportAnnual ? 'text-purple-400' : 'text-slate-500'}`}>
+                                {f.reportAnnual ? 'Đã nộp' : 'Chưa nộp'}
+                              </span>
+                            </label>
+                          </td>
+                        </>
+                      )}
+
                       <td className="px-4 py-4 align-top text-right">
                         <div className="flex justify-end gap-1">
                           <button
@@ -1239,6 +1288,38 @@ export default function Facilities({
                       />
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Reports Panel */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-850 pt-4">
+                <div className="bg-purple-950/10 border border-purple-900/30 p-3.5 rounded-xl flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-bold text-blue-400">Báo cáo 6 tháng đầu năm</h5>
+                    <p className="text-[10px] text-slate-500">Đã nhận đủ hồ sơ báo cáo chưa?</p>
+                  </div>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={report6Months}
+                      onChange={(e) => setReport6Months(e.target.checked)}
+                      className="w-5 h-5 rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-900"
+                    />
+                  </label>
+                </div>
+                <div className="bg-purple-950/10 border border-purple-900/30 p-3.5 rounded-xl flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-bold text-purple-400">Báo cáo tổng kết năm</h5>
+                    <p className="text-[10px] text-slate-500">Đã nhận đủ hồ sơ báo cáo chưa?</p>
+                  </div>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={reportAnnual}
+                      onChange={(e) => setReportAnnual(e.target.checked)}
+                      className="w-5 h-5 rounded border-slate-700 text-purple-600 focus:ring-purple-500 bg-slate-900"
+                    />
+                  </label>
                 </div>
               </div>
 
