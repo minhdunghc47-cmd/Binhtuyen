@@ -46,6 +46,7 @@ export default function Facilities({
   const [recordStatusFilter, setRecordStatusFilter] = useState<'all_active' | RecordStatus | 'all'>('all_active');
   const [planFilter, setPlanFilter] = useState<'all' | 'has-plan' | 'no-plan'>('all');
   const [sortBy, setSortBy] = useState<'name-asc' | 'name-desc' | 'date-desc' | 'date-asc'>('date-desc');
+  const [activeSubTab, setActiveSubTab] = useState<'all' | 'hoso' | 'phuongan' | 'huanluyen' | 'kiemtra'>('all');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -501,6 +502,29 @@ export default function Facilities({
 
       {/* Main Grid Card Listing Container */}
       <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl overflow-hidden">
+        {/* Sub-tabs Navigation */}
+        <div className="flex overflow-x-auto border-b border-slate-800 bg-slate-950/60 custom-scrollbar scrollbar-hide">
+          {[
+            { id: 'all', label: '🌟 Tổng hợp (Tất cả)' },
+            { id: 'hoso', label: '📂 Số hồ sơ' },
+            { id: 'phuongan', label: '🔥 Số phương án' },
+            { id: 'huanluyen', label: '🎓 Tình trạng huấn luyện' },
+            { id: 'kiemtra', label: '🛡️ Tình trạng kiểm tra' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id as any)}
+              className={`px-4 py-3 text-[11px] uppercase tracking-wider font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+                activeSubTab === tab.id
+                  ? 'bg-slate-800/80 text-blue-400 border-b-2 border-blue-500'
+                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Table Tip */}
         <div className="bg-slate-950/20 px-4 py-2 border-b border-slate-800/80 text-[11px] text-slate-400 flex items-center gap-2">
           <Info className="h-3.5 w-3.5 text-blue-400" />
@@ -513,16 +537,55 @@ export default function Facilities({
               <tr>
                 <th className="px-3 py-3 text-center text-xs font-semibold text-slate-400 uppercase w-10">STT</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-1/4">Tên Cơ Sở / Loại hình / Chu kỳ</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Cán bộ QL / Trực thuộc / Thôn</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Hồ sơ & Huấn luyện năm nay</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase text-center">Trạng thái kiểm tra</th>
+                
+                {activeSubTab === 'all' && (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Cán bộ QL / Trực thuộc / Thôn</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Hồ sơ & Huấn luyện năm nay</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase text-center">Trạng thái kiểm tra</th>
+                  </>
+                )}
+
+                {activeSubTab === 'hoso' && (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-40">Cán bộ QL / Trực thuộc</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-48">Tình trạng Hồ sơ</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Số hồ sơ gốc</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Số nộp lưu</th>
+                  </>
+                )}
+
+                {activeSubTab === 'phuongan' && (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-40">Cán bộ QL / Trực thuộc</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Số Phương án</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Ghi chú</th>
+                  </>
+                )}
+
+                {activeSubTab === 'huanluyen' && (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-40">Cán bộ QL / Trực thuộc</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase text-center w-48">Trạng thái Huấn luyện</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Lịch sử Huấn luyện</th>
+                  </>
+                )}
+
+                {activeSubTab === 'kiemtra' && (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-40">Cán bộ QL / Trực thuộc</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase text-center">Chu kỳ / Ngày KT</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Trạng thái Kiểm tra</th>
+                  </>
+                )}
+
                 <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 bg-transparent text-xs md:text-sm">
               {filteredFacilities.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500 font-bold italic">
+                  <td colSpan={10} className="px-6 py-12 text-center text-slate-500 font-bold italic">
                     Không có cơ sở dữ liệu phù hợp với bộ lọc hiện thời.
                   </td>
                 </tr>
@@ -593,111 +656,271 @@ export default function Facilities({
                         </div>
                       </td>
 
-                      <td className="px-4 py-4 align-top">
-                        {/* Assignee select */}
-                        <select
-                          value={f.manager}
-                          onChange={(e) => handleInlineUpdate(f.id, 'manager', e.target.value)}
-                          className="bg-transparent border-none text-blue-400 focus:ring-1 focus:ring-blue-500 rounded font-bold cursor-pointer text-xs focus:outline-none"
-                        >
-                          {MANAGERS.map((m) => (
-                            <option key={m} value={m} className="bg-slate-900 text-slate-300">
-                              {m}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="text-[11px] text-slate-400 mt-1">
-                          Thôn: 
-                          <input
-                            type="text"
-                            value={f.village}
-                            onChange={(e) => handleInlineUpdate(f.id, 'village', e.target.value)}
-                            className="bg-transparent text-slate-300 rounded focus:outline-none px-1 italic text-xs border border-transparent hover:border-slate-800 ml-1 font-semibold focus:border-amber-500"
-                          />
-                        </div>
-                      </td>
+                      {/* Common Column 2: Manager/Village (reused across multiple tabs) */}
+                      {activeSubTab !== 'all' && (
+                        <td className="px-4 py-4 align-top">
+                          <select
+                            value={f.manager}
+                            onChange={(e) => handleInlineUpdate(f.id, 'manager', e.target.value)}
+                            className="bg-transparent border-none text-blue-400 focus:ring-1 focus:ring-blue-500 rounded font-bold cursor-pointer text-xs focus:outline-none w-full"
+                          >
+                            {MANAGERS.map((m) => (
+                              <option key={m} value={m} className="bg-slate-900 text-slate-300">
+                                {m}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="text-[11px] text-slate-400 mt-1 flex items-center">
+                            Thôn: 
+                            <input
+                              type="text"
+                              value={f.village}
+                              onChange={(e) => handleInlineUpdate(f.id, 'village', e.target.value)}
+                              className="bg-transparent text-slate-300 rounded focus:outline-none px-1 italic text-xs border border-transparent hover:border-slate-800 ml-1 font-semibold focus:border-amber-500 w-full"
+                            />
+                          </div>
+                        </td>
+                      )}
 
-                      <td className="px-4 py-4 align-top space-y-1">
-                        <div className="flex items-center text-[11px] text-slate-400 gap-1">
-                          <span>HS:</span>
-                          <input
-                            type="text"
-                            value={f.recordNum || ''}
-                            onChange={(e) => handleInlineUpdate(f.id, 'recordNum', e.target.value)}
-                            placeholder="Số hồ sơ..."
-                            className="bg-transparent text-slate-300 rounded focus:outline-none px-1 py-0.5 font-mono text-xs border border-transparent hover:border-slate-800 w-24 focus:border-blue-505"
-                          />
-                        </div>
-                        <div className="flex items-center text-[11px] text-slate-400 gap-1">
-                          <span>PA:</span>
-                          <input
-                            type="text"
-                            value={f.planNum || ''}
-                            onChange={(e) => handleInlineUpdate(f.id, 'planNum', e.target.value)}
-                            placeholder="Chưa có..."
-                            className="bg-transparent text-purple-400 rounded focus:outline-none px-1 py-0.5 font-mono text-xs font-bold border border-transparent hover:border-slate-800 w-24 focus:border-purple-500"
-                          />
-                        </div>
-                        {f.recordStatus === 'da_nop_luu' && (
-                          <div className="flex items-center text-[11px] text-slate-400 gap-1">
-                            <span>Lưu:</span>
+                      {/* --- TAB: ALL --- */}
+                      {activeSubTab === 'all' && (
+                        <>
+                          <td className="px-4 py-4 align-top">
+                            {/* Assignee select */}
+                            <select
+                              value={f.manager}
+                              onChange={(e) => handleInlineUpdate(f.id, 'manager', e.target.value)}
+                              className="bg-transparent border-none text-blue-400 focus:ring-1 focus:ring-blue-500 rounded font-bold cursor-pointer text-xs focus:outline-none"
+                            >
+                              {MANAGERS.map((m) => (
+                                <option key={m} value={m} className="bg-slate-900 text-slate-300">
+                                  {m}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="text-[11px] text-slate-400 mt-1">
+                              Thôn: 
+                              <input
+                                type="text"
+                                value={f.village}
+                                onChange={(e) => handleInlineUpdate(f.id, 'village', e.target.value)}
+                                className="bg-transparent text-slate-300 rounded focus:outline-none px-1 italic text-xs border border-transparent hover:border-slate-800 ml-1 font-semibold focus:border-amber-500"
+                              />
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-4 align-top space-y-1">
+                            <div className="flex items-center text-[11px] text-slate-400 gap-1">
+                              <span>HS:</span>
+                              <input
+                                type="text"
+                                value={f.recordNum || ''}
+                                onChange={(e) => handleInlineUpdate(f.id, 'recordNum', e.target.value)}
+                                placeholder="Số hồ sơ..."
+                                className="bg-transparent text-slate-300 rounded focus:outline-none px-1 py-0.5 font-mono text-xs border border-transparent hover:border-slate-800 w-24 focus:border-blue-505"
+                              />
+                            </div>
+                            <div className="flex items-center text-[11px] text-slate-400 gap-1">
+                              <span>PA:</span>
+                              <input
+                                type="text"
+                                value={f.planNum || ''}
+                                onChange={(e) => handleInlineUpdate(f.id, 'planNum', e.target.value)}
+                                placeholder="Chưa có..."
+                                className="bg-transparent text-purple-400 rounded focus:outline-none px-1 py-0.5 font-mono text-xs font-bold border border-transparent hover:border-slate-800 w-24 focus:border-purple-500"
+                              />
+                            </div>
+                            {f.recordStatus === 'da_nop_luu' && (
+                              <div className="flex items-center text-[11px] text-slate-400 gap-1">
+                                <span>Lưu:</span>
+                                <input
+                                  type="text"
+                                  value={f.archiveNum || ''}
+                                  onChange={(e) => handleInlineUpdate(f.id, 'archiveNum', e.target.value)}
+                                  placeholder="Số lưu..."
+                                  className="bg-transparent text-slate-400 rounded focus:outline-none px-1 py-0.5 font-mono text-xs border border-transparent hover:border-slate-800 w-24 focus:border-slate-500"
+                                />
+                              </div>
+                            )}
+                            <div className="pt-1.5 flex items-center">
+                              <button
+                                onClick={() => setHistoryFacId(historyFacId === f.id ? null : f.id)}
+                                className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1"
+                              >
+                                <History className="h-3 w-3" />
+                                Lịch sử HL ({(f.trainingHistory || []).length})
+                              </button>
+                            </div>
+
+                            {/* History Detail Drawer directly inline */}
+                            {historyFacId === f.id && (
+                              <div className="bg-slate-950 p-2 border border-slate-800 rounded-lg mt-2 space-y-1.5 max-w-[240px]">
+                                <div className="font-bold text-[10px] text-emerald-400 flex items-center justify-between border-b border-slate-850 pb-1">
+                                  <span>LỊCH SỬ HUẤN LUYỆN</span>
+                                  <span className="text-[8px] text-slate-500 uppercase">Cơ sở chi trả</span>
+                                </div>
+                                {(f.trainingHistory || []).length === 0 ? (
+                                  <p className="text-[10px] text-slate-500 italic">Chưa huấn luyện năm nay</p>
+                                ) : (
+                                  <div className="max-h-24 overflow-y-auto space-y-1">
+                                    {(f.trainingHistory || []).map((t, idx) => (
+                                      <div key={`${t.id}-${idx}`} className="text-[10px] text-slate-400 flex justify-between bg-slate-900 px-1.5 py-0.5 rounded">
+                                        <span>Năm {t.year}:</span>
+                                        <span className="font-bold text-emerald-400">
+                                          {t.amount > 0 ? new Intl.NumberFormat('vi-VN').format(t.amount) : '0'} ₫
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="px-4 py-4 align-top text-center">
+                            <input
+                              type="date"
+                              value={f.lastInspectionDate || ''}
+                              onChange={(e) => handleInlineUpdate(f.id, 'lastInspectionDate', e.target.value)}
+                              className="bg-slate-950/40 text-blue-400 font-bold px-1.5 py-0.5 border border-slate-850 rounded text-[11px] focus:outline-none focus:border-blue-500"
+                            />
+                            <div className="mt-1.5">
+                              <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${inspectBadgeColor}`}>
+                                {inspectMessage}
+                              </span>
+                            </div>
+                          </td>
+                        </>
+                      )}
+
+                      {/* --- TAB: HỒ SƠ --- */}
+                      {activeSubTab === 'hoso' && (
+                        <>
+                          <td className="px-4 py-4 align-top">
+                            <select
+                              value={f.recordStatus}
+                              onChange={(e) => handleInlineUpdate(f.id, 'recordStatus', e.target.value)}
+                              className={`text-xs font-bold rounded px-2 py-1 focus:outline-none ${
+                                f.recordStatus === 'hien_hanh' ? 'bg-emerald-950/30 text-emerald-400 border border-emerald-900/50' :
+                                f.recordStatus === 'du_kien_nop_luu' ? 'bg-purple-950/30 text-purple-400 border border-purple-900/50' :
+                                f.recordStatus === 'da_nop_luu' ? 'bg-slate-800 text-slate-400 border border-slate-700' :
+                                'bg-yellow-950/30 text-yellow-500 border border-yellow-900/50'
+                              }`}
+                            >
+                              <option value="chua_dang_ky">Chưa cấp số</option>
+                              <option value="hien_hanh">Đang hiện hành</option>
+                              <option value="du_kien_nop_luu">Dự kiến nộp lưu</option>
+                              <option value="da_nop_luu">Đã nộp lưu</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <input
+                              type="text"
+                              value={f.recordNum || ''}
+                              onChange={(e) => handleInlineUpdate(f.id, 'recordNum', e.target.value)}
+                              placeholder="Số hồ sơ..."
+                              className="bg-slate-950/40 text-blue-400 rounded focus:outline-none px-2 py-1 font-mono text-xs font-bold border border-slate-800 w-full focus:border-blue-500"
+                            />
+                          </td>
+                          <td className="px-4 py-4 align-top">
                             <input
                               type="text"
                               value={f.archiveNum || ''}
                               onChange={(e) => handleInlineUpdate(f.id, 'archiveNum', e.target.value)}
                               placeholder="Số lưu..."
-                              className="bg-transparent text-slate-400 rounded focus:outline-none px-1 py-0.5 font-mono text-xs border border-transparent hover:border-slate-800 w-24 focus:border-slate-500"
+                              disabled={f.recordStatus !== 'da_nop_luu'}
+                              className="bg-slate-950/40 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 rounded focus:outline-none px-2 py-1 font-mono text-xs border border-slate-800 w-full focus:border-slate-500"
                             />
-                          </div>
-                        )}
-                        <div className="pt-1.5 flex items-center">
-                          <button
-                            onClick={() => setHistoryFacId(historyFacId === f.id ? null : f.id)}
-                            className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1"
-                          >
-                            <History className="h-3 w-3" />
-                            Lịch sử HL ({(f.trainingHistory || []).length})
-                          </button>
-                        </div>
+                          </td>
+                        </>
+                      )}
 
-                        {/* History Detail Drawer directly inline */}
-                        {historyFacId === f.id && (
-                          <div className="bg-slate-950 p-2 border border-slate-800 rounded-lg mt-2 space-y-1.5 max-w-[240px]">
-                            <div className="font-bold text-[10px] text-emerald-400 flex items-center justify-between border-b border-slate-850 pb-1">
-                              <span>LỊCH SỬ HUẤN LUYỆN</span>
-                              <span className="text-[8px] text-slate-500 uppercase">Cơ sở chi trả</span>
-                            </div>
-                            {(f.trainingHistory || []).length === 0 ? (
-                              <p className="text-[10px] text-slate-500 italic">Chưa huấn luyện năm nay</p>
+                      {/* --- TAB: PHƯƠNG ÁN --- */}
+                      {activeSubTab === 'phuongan' && (
+                        <>
+                          <td className="px-4 py-4 align-top">
+                            <input
+                              type="text"
+                              value={f.planNum || ''}
+                              onChange={(e) => handleInlineUpdate(f.id, 'planNum', e.target.value)}
+                              placeholder="Nhập số phương án..."
+                              className="bg-slate-950/40 text-purple-400 rounded focus:outline-none px-2 py-1 font-mono text-sm font-bold border border-slate-800 w-full focus:border-purple-500"
+                            />
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <textarea
+                              value={f.notes || ''}
+                              onChange={(e) => handleInlineUpdate(f.id, 'notes', e.target.value)}
+                              placeholder="Ghi chú về phương án..."
+                              rows={2}
+                              className="bg-slate-950/40 text-slate-300 rounded focus:outline-none px-2 py-1 text-xs border border-slate-800 w-full focus:border-blue-500 resize-none"
+                            />
+                          </td>
+                        </>
+                      )}
+
+                      {/* --- TAB: HUẤN LUYỆN --- */}
+                      {activeSubTab === 'huanluyen' && (
+                        <>
+                          <td className="px-4 py-4 align-top text-center">
+                            {(f.trainingHistory || []).some(t => t.year === today.getFullYear()) ? (
+                              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-950/30 text-emerald-400 border border-emerald-900/50">
+                                Đã huấn luyện {today.getFullYear()}
+                              </span>
                             ) : (
-                              <div className="max-h-24 overflow-y-auto space-y-1">
-                                {(f.trainingHistory || []).map((t, idx) => (
-                                  <div key={`${t.id}-${idx}`} className="text-[10px] text-slate-400 flex justify-between bg-slate-900 px-1.5 py-0.5 rounded">
-                                    <span>Năm {t.year}:</span>
-                                    <span className="font-bold text-emerald-400">
-                                      {t.amount > 0 ? new Intl.NumberFormat('vi-VN').format(t.amount) : '0'} ₫
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
+                              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-rose-950/30 text-rose-400 border border-rose-900/50 animate-pulse">
+                                Chưa huấn luyện {today.getFullYear()}
+                              </span>
                             )}
-                          </div>
-                        )}
-                      </td>
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <div className="bg-slate-950/50 p-2 border border-slate-800/80 rounded-lg space-y-1.5 w-full">
+                              {(f.trainingHistory || []).length === 0 ? (
+                                <p className="text-[11px] text-slate-500 italic">Chưa có dữ liệu</p>
+                              ) : (
+                                <div className="max-h-24 overflow-y-auto space-y-1 custom-scrollbar">
+                                  {(f.trainingHistory || []).map((t, idx) => (
+                                    <div key={`${t.id}-${idx}`} className="text-[11px] text-slate-400 flex justify-between bg-slate-900 px-2 py-1 rounded">
+                                      <span>Năm {t.year} ({new Date(t.date).toLocaleDateString('vi-VN')}):</span>
+                                      <span className="font-bold text-emerald-400">
+                                        {t.amount > 0 ? new Intl.NumberFormat('vi-VN').format(t.amount) : '0'} ₫
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <button
+                                onClick={() => openFormModal(f)}
+                                className="w-full mt-2 py-1 text-[10px] font-bold text-blue-400 bg-blue-950/20 hover:bg-blue-900/40 rounded transition-colors"
+                              >
+                                + Thêm/Sửa Lịch sử
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
 
-                      <td className="px-4 py-4 align-top text-center">
-                        <input
-                          type="date"
-                          value={f.lastInspectionDate || ''}
-                          onChange={(e) => handleInlineUpdate(f.id, 'lastInspectionDate', e.target.value)}
-                          className="bg-slate-950/40 text-blue-400 font-bold px-1.5 py-0.5 border border-slate-850 rounded text-[11px] focus:outline-none focus:border-blue-500"
-                        />
-                        <div className="mt-1.5">
-                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${inspectBadgeColor}`}>
-                            {inspectMessage}
-                          </span>
-                        </div>
-                      </td>
+                      {/* --- TAB: KIỂM TRA --- */}
+                      {activeSubTab === 'kiemtra' && (
+                        <>
+                          <td className="px-4 py-4 align-top text-center">
+                            <div className="text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">{f.group}</div>
+                            <input
+                              type="date"
+                              value={f.lastInspectionDate || ''}
+                              onChange={(e) => handleInlineUpdate(f.id, 'lastInspectionDate', e.target.value)}
+                              className="bg-slate-950/60 text-blue-400 font-bold px-2 py-1.5 border border-slate-800 rounded text-xs focus:outline-none focus:border-blue-500 w-full text-center"
+                            />
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <div className="bg-slate-950/40 p-2 rounded-lg border border-slate-800/50 h-full flex flex-col justify-center">
+                              <span className={`inline-block px-3 py-1.5 rounded-md text-xs font-bold border w-full text-center ${inspectBadgeColor}`}>
+                                {inspectMessage}
+                              </span>
+                            </div>
+                          </td>
+                        </>
+                      )}
 
                       <td className="px-4 py-4 align-top text-right">
                         <div className="flex justify-end gap-1">
