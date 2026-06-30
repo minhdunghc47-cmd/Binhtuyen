@@ -564,26 +564,60 @@ export default function Facilities({
       <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl overflow-hidden">
         {/* Sub-tabs Navigation */}
         <div className="flex overflow-x-auto border-b border-slate-800 bg-slate-950/60 custom-scrollbar scrollbar-hide">
-          {[
-            { id: 'all', label: '🌟 Tổng hợp (Tất cả)' },
-            { id: 'hoso', label: '📂 Số hồ sơ' },
-            { id: 'phuongan', label: '🔥 Số phương án' },
-            { id: 'huanluyen', label: '🎓 Tình trạng huấn luyện' },
-            { id: 'kiemtra', label: '🛡️ Tình trạng kiểm tra' },
-            { id: 'baocao', label: '📊 Báo cáo định kỳ' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as any)}
-              className={`px-4 py-3 text-[11px] uppercase tracking-wider font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
-                activeSubTab === tab.id
-                  ? 'bg-slate-800/80 text-blue-400 border-b-2 border-blue-500'
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {(() => {
+            const totalCount = filteredFacilities.length;
+            const hosoCount = filteredFacilities.filter(f => f.recordNum && f.recordNum.trim()).length;
+            const phuonganCount = filteredFacilities.filter(f => f.planNum && f.planNum.trim()).length;
+            const huanluyenCount = filteredFacilities.filter(f => (f.trainingHistory || []).some(t => t.year === new Date().getFullYear())).length;
+            const kiemtraCount = filteredFacilities.filter(f => {
+              if (!f.lastInspectionDate) return false;
+              if (f.group === 'Chưa phân loại') return false;
+              const last = new Date(f.lastInspectionDate);
+              const diffDays = Math.ceil(Math.abs(new Date().getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+              const threshold = f.group === 'Nhóm 1' ? 365 : 730;
+              return diffDays < threshold;
+            }).length;
+            const baocaoCount = filteredFacilities.filter(f => f.report6Months || f.reportAnnual).length;
+
+            const getStatsText = (id: string) => {
+              if (id === 'all') return '';
+              if (totalCount === 0) return '(0/0)';
+              if (id === 'hoso') return `${hosoCount}/${totalCount}`;
+              if (id === 'phuongan') return `${phuonganCount}/${totalCount}`;
+              if (id === 'huanluyen') return `${huanluyenCount}/${totalCount}`;
+              if (id === 'kiemtra') return `${kiemtraCount}/${totalCount}`;
+              if (id === 'baocao') return `${baocaoCount}/${totalCount}`;
+              return '';
+            };
+
+            return [
+              { id: 'all', label: '🌟 Tổng hợp (Tất cả)' },
+              { id: 'hoso', label: '📂 Số hồ sơ' },
+              { id: 'phuongan', label: '🔥 Số phương án' },
+              { id: 'huanluyen', label: '🎓 Tình trạng huấn luyện' },
+              { id: 'kiemtra', label: '🛡️ Tình trạng kiểm tra' },
+              { id: 'baocao', label: '📊 Báo cáo định kỳ' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSubTab(tab.id as any)}
+                className={`px-4 py-3 text-[11px] uppercase tracking-wider font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+                  activeSubTab === tab.id
+                    ? 'bg-slate-800/80 text-blue-400 border-b-2 border-blue-500'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+                }`}
+              >
+                <span>{tab.label}</span>
+                {getStatsText(tab.id) && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    activeSubTab === tab.id ? 'bg-blue-900/50 text-blue-300' : 'bg-slate-800 text-slate-500'
+                  }`}>
+                    {getStatsText(tab.id)}
+                  </span>
+                )}
+              </button>
+            ));
+          })()}
         </div>
 
         {/* Table Tip */}
