@@ -380,6 +380,58 @@ export default function Facilities({
 
     return matchesSearch && matchesGroup && matchesStatus && matchesRecordStatus && matchesPlan;
   }).sort((a, b) => {
+    // 1. Smart prioritization (Missing Info goes up)
+    const todayObj = new Date();
+    const getMissingScore = (f: Facility) => {
+      let score = 0;
+      
+      const isInspectionMissing = () => {
+        if (!f.lastInspectionDate) return true;
+        if (f.group === 'Chưa phân loại') return true;
+        const last = new Date(f.lastInspectionDate);
+        const diffDays = Math.ceil(Math.abs(todayObj.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+        const threshold = f.group === 'Nhóm 1' ? 365 : 730;
+        return diffDays >= threshold;
+      };
+
+      const isTrainingMissing = () => {
+        return !(f.trainingHistory || []).some(t => t.year === todayObj.getFullYear());
+      };
+
+      if (activeSubTab === 'hoso') {
+        if (!f.recordNum || !f.recordNum.trim()) score += 1;
+        if (f.recordStatus === 'da_nop_luu' && (!f.archiveNum || !f.archiveNum.trim())) score += 1;
+      } 
+      else if (activeSubTab === 'phuongan') {
+        if (!f.planNum || !f.planNum.trim()) score += 1;
+      } 
+      else if (activeSubTab === 'huanluyen') {
+        if (isTrainingMissing()) score += 1;
+      } 
+      else if (activeSubTab === 'kiemtra') {
+        if (isInspectionMissing()) score += 1;
+      } 
+      else if (activeSubTab === 'baocao') {
+        if (!f.report6Months) score += 1;
+        if (!f.reportAnnual) score += 1;
+      }
+      else if (activeSubTab === 'all') {
+        if (!f.recordNum || !f.recordNum.trim()) score += 1;
+        if (!f.planNum || !f.planNum.trim()) score += 1;
+        if (isTrainingMissing()) score += 1;
+        if (isInspectionMissing()) score += 1;
+      }
+      return score;
+    };
+
+    const scoreA = getMissingScore(a);
+    const scoreB = getMissingScore(b);
+    
+    if (scoreA !== scoreB) {
+      return scoreB - scoreA; // Higher score (more missing info) comes first
+    }
+
+    // 2. Fallback to Standard Sort
     if (sortBy === 'name-asc') return (a.name || '').localeCompare(b.name || '');
     if (sortBy === 'name-desc') return (b.name || '').localeCompare(a.name || '');
     if (sortBy === 'date-desc') return (b.openDate || '').localeCompare(a.openDate || '');
