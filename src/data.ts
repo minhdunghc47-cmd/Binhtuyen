@@ -12,12 +12,10 @@ export function generateId(): string {
 
 // Vietnamese provinces/streets standard test values
 export const VILLAGES = [
-  'Thôn Bình Tuyền',
-  'Thôn Bình Phú',
-  'Thôn Trung Đông',
-  'Thôn Tây Bắc',
-  'Khu Phố Thượng',
-  'Xóm Ngoài Văn'
+  'Ba Gò', 'Bá Hương', 'Bảo Sơn', 'Bắc Kế', 'Đê Hến', 'Đồng Giang',
+  'Gia Khau', 'My Kỳ', 'Mỹ Khê', 'Quang Vinh', 'Tam Thành', 'Tân Lập',
+  'Tân Ngọc', 'Thanh Lanh', 'Thích Chung', 'Thống Nhất', 'Thiện Chi',
+  'Trại Cúp', 'Trung Mầu', 'Văn Giáo', 'Vinh Tiến', 'Vĩnh Đồng'
 ];
 
 export const ZALO_PHONES: Record<string, string> = {
