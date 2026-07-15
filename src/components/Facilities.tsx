@@ -46,7 +46,7 @@ export default function Facilities({
   const [recordStatusFilter, setRecordStatusFilter] = useState<'all_active' | RecordStatus | 'all'>('all_active');
   const [planFilter, setPlanFilter] = useState<'all' | 'has-plan' | 'no-plan'>('all');
   const [sortBy, setSortBy] = useState<'name-asc' | 'name-desc' | 'date-desc' | 'date-asc'>('date-desc');
-  const [activeSubTab, setActiveSubTab] = useState<'all' | 'hoso' | 'phuongan' | 'huanluyen' | 'kiemtra' | 'baocao'>('all');
+  const [activeSubTab, setActiveSubTab] = useState<'all' | 'hoso' | 'phuongan' | 'huanluyen' | 'kiemtra' | 'baocao' | 'nopluu'>('all');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -367,7 +367,9 @@ export default function Facilities({
     const matchesStatus = reportStatusFilter === 'all' || f.reportStatus === reportStatusFilter;
     
     let matchesRecordStatus = true;
-    if (recordStatusFilter === 'all_active') {
+    if (activeSubTab === 'nopluu') {
+      matchesRecordStatus = f.recordStatus === 'da_nop_luu';
+    } else if (recordStatusFilter === 'all_active') {
       matchesRecordStatus = f.recordStatus !== 'da_nop_luu';
     } else if (recordStatusFilter !== 'all') {
       matchesRecordStatus = f.recordStatus === recordStatusFilter;
@@ -587,6 +589,7 @@ export default function Facilities({
               if (id === 'huanluyen') return `${huanluyenCount}/${totalCount}`;
               if (id === 'kiemtra') return `${kiemtraCount}/${totalCount}`;
               if (id === 'baocao') return `${baocaoCount}/${totalCount}`;
+              if (id === 'nopluu') return `${totalCount}`; // For nopluu, totalCount is the number of archived records
               return '';
             };
 
@@ -597,6 +600,7 @@ export default function Facilities({
               { id: 'huanluyen', label: '🎓 Tình trạng huấn luyện' },
               { id: 'kiemtra', label: '🛡️ Tình trạng kiểm tra' },
               { id: 'baocao', label: '📊 Báo cáo định kỳ' },
+              { id: 'nopluu', label: '📦 Hồ sơ đã nộp lưu' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -679,6 +683,14 @@ export default function Facilities({
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-40">Cán bộ QL / Trực thuộc</th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase">Báo cáo 6 Tháng</th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase">Báo cáo Năm</th>
+                  </>
+                )}
+
+                {activeSubTab === 'nopluu' && (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase w-40">Cán bộ QL / Trực thuộc</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Số nộp lưu</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Số hồ sơ gốc</th>
                   </>
                 )}
 
@@ -1053,6 +1065,30 @@ export default function Facilities({
                                 {f.reportAnnual ? 'Đã nộp' : 'Chưa nộp'}
                               </span>
                             </label>
+                          </td>
+                        </>
+                      )}
+
+                      {/* --- TAB: NỘP LƯU --- */}
+                      {activeSubTab === 'nopluu' && (
+                        <>
+                          <td className="px-4 py-4 align-top">
+                            <input
+                              type="text"
+                              value={f.archiveNum || ''}
+                              onChange={(e) => handleInlineUpdate(f.id, 'archiveNum', e.target.value)}
+                              placeholder="Nhập số lưu..."
+                              className="bg-slate-950/40 text-blue-400 font-bold rounded focus:outline-none px-2 py-1.5 font-mono text-xs border border-slate-800 w-full focus:border-blue-500"
+                            />
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <input
+                              type="text"
+                              value={f.recordNum || ''}
+                              onChange={(e) => handleInlineUpdate(f.id, 'recordNum', e.target.value)}
+                              placeholder="Số HS gốc..."
+                              className="bg-slate-950/40 text-slate-400 rounded focus:outline-none px-2 py-1.5 font-mono text-xs border border-slate-800 w-full focus:border-slate-500"
+                            />
                           </td>
                         </>
                       )}
