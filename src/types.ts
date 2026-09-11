@@ -16,6 +16,13 @@ export interface TrainingLog {
 
 export type RecordStatus = 'hien_hanh' | 'chua_dang_ky' | 'du_kien_nop_luu' | 'da_nop_luu';
 
+export interface InspectionLog {
+  id: string | number;
+  date: string;
+  inspector: string;
+  isDigitized: boolean;
+}
+
 export interface Facility {
   id: string;
   name: string;
@@ -29,8 +36,9 @@ export interface Facility {
   manager: string;
   pc08Builder: string;
   pc08Date: string;
-  lastInspectionDate: string;
-  inspector: string;
+  lastInspectionDate: string; // Keep for backward compatibility / quick access
+  inspector: string;          // Keep for backward compatibility / quick access
+  inspectionHistory?: InspectionLog[];
   constructor: string;
   notes: string;
   trainingHistory: TrainingLog[];

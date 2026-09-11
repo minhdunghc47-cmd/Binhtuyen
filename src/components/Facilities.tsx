@@ -79,10 +79,29 @@ export default function Facilities({
   const [trainingHistory, setTrainingHistory] = useState<TrainingLog[]>([]);
   const [report6Months, setReport6Months] = useState(false);
   const [reportAnnual, setReportAnnual] = useState(false);
+  const [inspectionHistory, setInspectionHistory] = useState<InspectionLog[]>([]);
 
   // Sub-form for training logging
   const [trainDate, setTrainDate] = useState('');
   const [trainAmount, setTrainAmount] = useState('');
+
+  // Sub-form for inspection logging
+  const [inspectDateForm, setInspectDateForm] = useState('');
+  const [inspectPerson, setInspectPerson] = useState('');
+  const [isDigitized, setIsDigitized] = useState(false);
+  const [inspectHistoryFacId, setInspectHistoryFacId] = useState<string | null>(null);
+
+  // Helper to get latest inspection
+  const getLatestInspection = (fac: Facility) => {
+    if (fac.inspectionHistory && fac.inspectionHistory.length > 0) {
+      const sorted = [...fac.inspectionHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return sorted[0];
+    }
+    if (fac.lastInspectionDate) {
+      return { id: 'legacy', date: fac.lastInspectionDate, inspector: fac.inspector, isDigitized: false };
+    }
+    return null;
+  };
 
   // Handle opening for Create vs Edit
   const openFormModal = (fac: Facility | null = null) => {
@@ -107,6 +126,7 @@ export default function Facilities({
       setReportStatus(fac.reportStatus || 'danh_sach_chinh');
       setRecordStatus(fac.recordStatus || 'hien_hanh');
       setTrainingHistory(fac.trainingHistory || []);
+      setInspectionHistory(fac.inspectionHistory || []);
       setReport6Months(fac.report6Months || false);
       setReportAnnual(fac.reportAnnual || false);
     } else {
@@ -129,11 +149,15 @@ export default function Facilities({
       setReportStatus('danh_sach_chinh');
       setRecordStatus('chua_dang_ky');
       setTrainingHistory([]);
+      setInspectionHistory([]);
       setReport6Months(false);
       setReportAnnual(false);
     }
     setTrainDate('');
     setTrainAmount('');
+    setInspectDateForm('');
+    setInspectPerson('');
+    setIsDigitized(false);
     setIsModalOpen(true);
   };
 
@@ -148,13 +172,32 @@ export default function Facilities({
       date: trainDate,
       amount: cost,
     };
-    setTrainingHistory([newLog, ...trainingHistory]);
+    setTrainingHistory([newLog, ...trainingHistory].sort((a, b) => b.year - a.year));
     setTrainDate('');
     setTrainAmount('');
   };
 
-  const handleRemoveTraining = (logId: string | number) => {
-    setTrainingHistory(trainingHistory.filter((t) => t.id !== logId));
+  const handleRemoveTraining = (id: string | number) => {
+    setTrainingHistory(trainingHistory.filter(t => t.id !== id));
+  };
+
+  const handleAddInspection = () => {
+    setFormError('');
+    if (!inspectDateForm) return setFormError('Hãy chọn ngày kiểm tra!');
+    const newLog: InspectionLog = {
+      id: generateId(),
+      date: inspectDateForm,
+      inspector: inspectPerson,
+      isDigitized: isDigitized
+    };
+    setInspectionHistory([newLog, ...inspectionHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    setInspectDateForm('');
+    setInspectPerson('');
+    setIsDigitized(false);
+  };
+
+  const handleRemoveInspection = (id: string | number) => {
+    setInspectionHistory(inspectionHistory.filter(i => i.id !== id));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -185,6 +228,7 @@ export default function Facilities({
       pc08Date,
       lastInspectionDate,
       inspector: inspector.trim(),
+      inspectionHistory,
       constructor: constructorName.trim(),
       notes: notes.trim(),
       reportStatus,
@@ -388,9 +432,10 @@ export default function Facilities({
       let score = 0;
       
       const isInspectionMissing = () => {
-        if (!f.lastInspectionDate) return true;
+        const latest = getLatestInspection(f);
+        if (!latest || !latest.date) return true;
         if (f.group === 'Chưa phân loại') return true;
-        const last = new Date(f.lastInspectionDate);
+        const last = new Date(latest.date);
         const diffDays = Math.ceil(Math.abs(todayObj.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
         const threshold = f.group === 'Nhóm 1' ? 365 : 730;
         return diffDays >= threshold;
@@ -572,9 +617,10 @@ export default function Facilities({
             const phuonganCount = filteredFacilities.filter(f => f.planNum && f.planNum.trim()).length;
             const huanluyenCount = filteredFacilities.filter(f => (f.trainingHistory || []).some(t => t.year === new Date().getFullYear())).length;
             const kiemtraCount = filteredFacilities.filter(f => {
-              if (!f.lastInspectionDate) return false;
+              const latest = getLatestInspection(f);
+              if (!latest || !latest.date) return false;
               if (f.group === 'Chưa phân loại') return false;
-              const last = new Date(f.lastInspectionDate);
+              const last = new Date(latest.date);
               const diffDays = Math.ceil(Math.abs(new Date().getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
               const threshold = f.group === 'Nhóm 1' ? 365 : 730;
               return diffDays < threshold;
@@ -706,7 +752,8 @@ export default function Facilities({
                 </tr>
               ) : (
                 filteredFacilities.map((f, idx) => {
-                  const hasInspectDate = f.lastInspectionDate !== '';
+                  const latestInspect = getLatestInspection(f);
+                  const hasInspectDate = latestInspect && latestInspect.date !== '';
                   let isOverdue = false;
                   let inspectMessage = 'Đảm bảo thời hạn';
                   let inspectBadgeColor = 'text-emerald-400 bg-emerald-950/20 border-emerald-900/30';
@@ -719,7 +766,7 @@ export default function Facilities({
                     inspectMessage = 'CHƯA TỪNG KIỂM TRA';
                     inspectBadgeColor = 'text-rose-400 bg-rose-950/20 border-rose-900/40 animate-pulse';
                   } else {
-                    const lastInspectObj = new Date(f.lastInspectionDate);
+                    const lastInspectObj = new Date(latestInspect.date);
                     const diffTime = Math.abs(today.getTime() - lastInspectObj.getTime());
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     const threshold = f.group === 'Nhóm 1' ? 365 : 730;
@@ -892,17 +939,64 @@ export default function Facilities({
                             )}
                           </td>
 
-                          <td className="px-4 py-4 align-top text-center">
-                            <input
-                              type="date"
-                              value={f.lastInspectionDate || ''}
-                              onChange={(e) => handleInlineUpdate(f.id, 'lastInspectionDate', e.target.value)}
-                              className="bg-slate-950/40 text-blue-400 font-bold px-1.5 py-0.5 border border-slate-850 rounded text-[11px] focus:outline-none focus:border-blue-500"
-                            />
-                            <div className="mt-1.5">
+                          <td className="px-4 py-4 align-top text-center relative">
+                            <button
+                              onClick={() => setInspectHistoryFacId(inspectHistoryFacId === f.id ? null : f.id)}
+                              className="bg-slate-950/40 text-blue-400 font-bold px-2 py-1 border border-slate-850 rounded text-[11px] hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 mx-auto w-24"
+                            >
+                              {latestInspect?.date ? new Date(latestInspect.date).toLocaleDateString('vi-VN') : 'Chưa KT'}
+                              <History className="h-3 w-3" />
+                            </button>
+                            
+                            {inspectHistoryFacId === f.id && (
+                              <div className="absolute top-full right-1/2 translate-x-1/2 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 p-3 text-left">
+                                <div className="flex justify-between items-center mb-2">
+                                  <h4 className="text-xs font-bold text-slate-200">Lịch sử Kiểm tra</h4>
+                                  <button onClick={() => setInspectHistoryFacId(null)} className="text-slate-500 hover:text-rose-400">✕</button>
+                                </div>
+                                <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                                  {f.inspectionHistory && f.inspectionHistory.length > 0 ? (
+                                    f.inspectionHistory.map(log => (
+                                      <div key={log.id} className="bg-slate-950 p-2 rounded border border-slate-800">
+                                        <div className="flex justify-between items-center mb-1">
+                                          <span className="text-[11px] font-bold text-blue-300">{new Date(log.date).toLocaleDateString('vi-VN')}</span>
+                                          <label className="flex items-center gap-1 cursor-pointer">
+                                            <input 
+                                              type="checkbox" 
+                                              checked={log.isDigitized} 
+                                              onChange={(e) => {
+                                                const newHistory = f.inspectionHistory!.map(i => i.id === log.id ? { ...i, isDigitized: e.target.checked } : i);
+                                                handleInlineUpdate(f.id, 'inspectionHistory', newHistory);
+                                              }}
+                                              className="w-3 h-3 rounded bg-slate-800 border-slate-700" 
+                                            />
+                                            <span className={`text-[9px] ${log.isDigitized ? 'text-emerald-400' : 'text-slate-500'}`}>Số hoá</span>
+                                          </label>
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 truncate">{log.inspector || 'Không có tên cán bộ'}</div>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="text-[10px] text-slate-500 text-center py-2">
+                                      {f.lastInspectionDate ? 'Có đợt KT cũ (Bấm sửa để thêm)' : 'Chưa có lịch sử'}
+                                    </div>
+                                  )}
+                                </div>
+                                <button onClick={() => { setInspectHistoryFacId(null); openFormModal(f); }} className="w-full mt-2 py-1.5 text-[10px] font-bold text-blue-400 bg-blue-950/30 hover:bg-blue-900/50 rounded transition-colors">
+                                  + Thêm đợt mới
+                                </button>
+                              </div>
+                            )}
+
+                            <div className="mt-1.5 flex flex-col items-center gap-1">
                               <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${inspectBadgeColor}`}>
                                 {inspectMessage}
                               </span>
+                              {latestInspect?.isDigitized && (
+                                <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border text-emerald-400 bg-emerald-950/20 border-emerald-900/30">
+                                  ✓ Đã Số Hoá
+                                </span>
+                              )}
                             </div>
                           </td>
                         </>
@@ -1018,20 +1112,66 @@ export default function Facilities({
                       {/* --- TAB: KIỂM TRA --- */}
                       {activeSubTab === 'kiemtra' && (
                         <>
-                          <td className="px-4 py-4 align-top text-center">
+                          <td className="px-4 py-4 align-top text-center relative">
                             <div className="text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">{f.group}</div>
-                            <input
-                              type="date"
-                              value={f.lastInspectionDate || ''}
-                              onChange={(e) => handleInlineUpdate(f.id, 'lastInspectionDate', e.target.value)}
-                              className="bg-slate-950/60 text-blue-400 font-bold px-2 py-1.5 border border-slate-800 rounded text-xs focus:outline-none focus:border-blue-500 w-full text-center"
-                            />
+                            <button
+                              onClick={() => setInspectHistoryFacId(inspectHistoryFacId === f.id ? null : f.id)}
+                              className="w-full bg-slate-950/60 text-blue-400 font-bold px-2 py-1.5 border border-slate-800 rounded text-xs hover:bg-slate-800 transition-colors flex items-center justify-between"
+                            >
+                              <span>{latestInspect?.date ? new Date(latestInspect.date).toLocaleDateString('vi-VN') : 'Chưa KT'}</span>
+                              <History className="h-3 w-3" />
+                            </button>
+
+                            {inspectHistoryFacId === f.id && (
+                              <div className="absolute top-full left-0 mt-2 w-72 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 p-3 text-left">
+                                <div className="flex justify-between items-center mb-2">
+                                  <h4 className="text-xs font-bold text-slate-200">Lịch sử Kiểm tra</h4>
+                                  <button onClick={() => setInspectHistoryFacId(null)} className="text-slate-500 hover:text-rose-400">✕</button>
+                                </div>
+                                <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                                  {f.inspectionHistory && f.inspectionHistory.length > 0 ? (
+                                    f.inspectionHistory.map(log => (
+                                      <div key={log.id} className="bg-slate-950 p-2 rounded border border-slate-800">
+                                        <div className="flex justify-between items-center mb-1">
+                                          <span className="text-[11px] font-bold text-blue-300">{new Date(log.date).toLocaleDateString('vi-VN')}</span>
+                                          <label className="flex items-center gap-1 cursor-pointer">
+                                            <input 
+                                              type="checkbox" 
+                                              checked={log.isDigitized} 
+                                              onChange={(e) => {
+                                                const newHistory = f.inspectionHistory!.map(i => i.id === log.id ? { ...i, isDigitized: e.target.checked } : i);
+                                                handleInlineUpdate(f.id, 'inspectionHistory', newHistory);
+                                              }}
+                                              className="w-3 h-3 rounded bg-slate-800 border-slate-700" 
+                                            />
+                                            <span className={`text-[9px] ${log.isDigitized ? 'text-emerald-400' : 'text-slate-500'}`}>Số hoá</span>
+                                          </label>
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 truncate">{log.inspector || 'Không có tên cán bộ'}</div>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="text-[10px] text-slate-500 text-center py-2">
+                                      {f.lastInspectionDate ? 'Có đợt KT cũ (Bấm sửa để thêm)' : 'Chưa có lịch sử'}
+                                    </div>
+                                  )}
+                                </div>
+                                <button onClick={() => { setInspectHistoryFacId(null); openFormModal(f); }} className="w-full mt-2 py-1.5 text-[10px] font-bold text-blue-400 bg-blue-950/30 hover:bg-blue-900/50 rounded transition-colors">
+                                  + Thêm đợt mới
+                                </button>
+                              </div>
+                            )}
                           </td>
                           <td className="px-4 py-4 align-top">
-                            <div className="bg-slate-950/40 p-2 rounded-lg border border-slate-800/50 h-full flex flex-col justify-center">
+                            <div className="bg-slate-950/40 p-2 rounded-lg border border-slate-800/50 h-full flex flex-col justify-center items-center gap-2">
                               <span className={`inline-block px-3 py-1.5 rounded-md text-xs font-bold border w-full text-center ${inspectBadgeColor}`}>
                                 {inspectMessage}
                               </span>
+                              {latestInspect?.isDigitized && (
+                                <span className="inline-block px-3 py-1 rounded-md text-[10px] font-bold border text-emerald-400 bg-emerald-950/20 border-emerald-900/30 w-full text-center">
+                                  ✓ Đã Số Hoá
+                                </span>
+                              )}
                             </div>
                           </td>
                         </>
@@ -1377,38 +1517,76 @@ export default function Facilities({
                   </div>
                 </div>
 
-                {/* Last Inspections */}
-                <div className="bg-blue-950/10 border border-blue-900/30 p-3.5 rounded-xl space-y-3">
-                  <h5 className="text-xs font-bold text-blue-400 flex items-center gap-1">
+                {/* Inspection History */}
+                <div className="bg-blue-950/10 border border-blue-900/30 p-3.5 rounded-xl flex flex-col h-full">
+                  <h5 className="text-xs font-bold text-blue-400 flex items-center gap-1 mb-3">
                     <ClipboardCheck className="h-4 w-4" />
-                    Đợt khám nghiệm / Kiểm tra
+                    Lịch sử Kiểm tra & Khám nghiệm
                   </h5>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">
-                        Ngày kiểm tra gần nhất
+                  <div className="flex flex-col gap-2 mb-3">
+                    <input
+                      type="date"
+                      value={inspectDateForm}
+                      onChange={(e) => setInspectDateForm(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Cán bộ / Đoàn kiểm tra"
+                      value={inspectPerson}
+                      onChange={(e) => setInspectPerson(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+                    />
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isDigitized}
+                          onChange={(e) => setIsDigitized(e.target.checked)}
+                          className="w-4 h-4 rounded border-slate-700 bg-slate-900"
+                        />
+                        <span className="text-xs text-slate-300">Đã Số hoá hồ sơ</span>
                       </label>
-                      <input
-                        type="date"
-                        value={lastInspectionDate}
-                        onChange={(e) => setLastInspectionDate(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs focus:outline-none font-bold text-blue-300"
-                      />
+                      <button
+                        type="button"
+                        onClick={handleAddInspection}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs font-bold transition-colors"
+                      >
+                        + Thêm
+                      </button>
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">
-                        Đoàn/Cán bộ thực hiện kiểm tra
-                      </label>
-                      <input
-                        type="text"
-                        value={inspector}
-                        onChange={(e) => setInspector(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs focus:outline-none"
-                        placeholder="Ví dụ: Đại úy Dũng & đội quản lý PCCC"
-                      />
-                    </div>
+                  <div className="flex-1 border border-slate-800 rounded bg-slate-950/50 p-2 overflow-y-auto max-h-32 custom-scrollbar space-y-1">
+                    {inspectionHistory.length === 0 ? (
+                      <div className="text-[10px] text-slate-500 text-center py-4">Chưa có dữ liệu kiểm tra.</div>
+                    ) : (
+                      inspectionHistory.map(log => (
+                        <div key={log.id} className="flex justify-between items-center bg-slate-900 border border-slate-800 p-2 rounded">
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-bold text-slate-200">
+                              {new Date(log.date).toLocaleDateString('vi-VN')}
+                            </span>
+                            <span className="text-[10px] text-slate-500">{log.inspector || 'N/A'}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {log.isDigitized && (
+                              <span className="text-[9px] font-bold text-emerald-400 border border-emerald-900/50 bg-emerald-950/30 px-1 rounded">
+                                Số hoá
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveInspection(log.id)}
+                              className="text-slate-500 hover:text-rose-400 text-xs font-bold"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
