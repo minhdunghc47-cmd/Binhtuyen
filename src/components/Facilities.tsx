@@ -361,15 +361,22 @@ export default function Facilities({
   };
 
   const handleExportCSV = () => {
-    const csvHeader = 'Ten co so;Nhom QL;Loai hinh;So ho so;So phuong an;Ngay mo;Thon/Xom;Can bo QL;Nguoi lap PC08;Ngay ky PC08;Ngay KT Gan Nhat;Nguoi/Doan KT;Thi cong;Ghi chu\n';
+    const csvHeader = 'Ten co so;Nhom QL;Loai hinh;So ho so;So phuong an;Ngay mo;Thon/Xom;Can bo QL;Nguoi lap PC08;Ngay ky PC08;Ngay KT Gan Nhat;Nguoi/Doan KT;Thi cong;Lich su Huan luyen;Ghi chu\n';
     let rowsText = '';
     
     facilities.forEach((f) => {
       const cleanNotes = (f.notes || '').replace(/[\r\n]+/g, ' ');
       const cleanName = (f.name || '').replace(/[\r\n]+/g, ' ');
       const cleanType = (f.facilityType || '').replace(/[\r\n]+/g, ' ');
-      const cleanInspector = (f.inspector || '').replace(/[\r\n]+/g, ' ');
+      
+      const latestInspect = getLatestInspection(f);
+      const inspectDateStr = latestInspect ? latestInspect.date : '';
+      const inspectorStr = latestInspect ? latestInspect.inspector : (f.inspector || '');
+      const cleanInspector = inspectorStr.replace(/[\r\n]+/g, ' ');
+      
       const cleanConst = (f.constructor || '').replace(/[\r\n]+/g, ' ');
+      
+      const trainingInfo = (f.trainingHistory || []).map(t => `Năm ${t.year} (${t.date} - ${t.amount}đ)`).join(' | ');
       
       const row = [
         cleanName,
@@ -382,9 +389,10 @@ export default function Facilities({
         f.manager || '',
         f.pc08Builder || '',
         f.pc08Date || '',
-        f.lastInspectionDate || '',
+        inspectDateStr,
         cleanInspector,
         cleanConst,
+        trainingInfo,
         cleanNotes
       ];
       rowsText += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';') + '\n';
