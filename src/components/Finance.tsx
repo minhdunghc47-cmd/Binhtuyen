@@ -13,6 +13,7 @@ import {
   ClipboardPen, 
   Plus, 
   Trash2, 
+  Edit2,
   Coins, 
   UserCheck, 
   RotateCcw, 
@@ -46,11 +47,14 @@ export default function Finance({
   const [formError, setFormError] = useState('');
 
   // Main Modal Form States
+  const [editingTransId, setEditingTransId] = useState<string | null>(null);
   const [formCategory, setFormCategory] = useState<FundCategory>('thu_quy');
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
   const [person, setPerson] = useState(MANAGERS[0]);
   const [customPerson, setCustomPerson] = useState('');
+  const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10));
+  const [advanceStatusForm, setAdvanceStatusForm] = useState<AdvanceStatus>('dang_ung');
 
   // Refund Modal States
   const [refundAmount, setRefundAmount] = useState('');
@@ -66,11 +70,11 @@ export default function Finance({
   // Core Financial Computations
   const totalIn = funds
     .filter((f) => f.type === 'thu')
-    .reduce((sum, f) => sum + f.amount, 0);
+    .reduce((sum, f) => sum + (f.amount || 0), 0);
 
   const totalOut = funds
     .filter((f) => f.type === 'chi')
-    .reduce((sum, f) => sum + f.amount, 0);
+    .reduce((sum, f) => sum + (f.amount || 0), 0);
 
   const cashBalance = totalIn - totalOut;
 
@@ -83,7 +87,7 @@ export default function Finance({
     (f) => f.category === 'tam_ung' && (f.advanceStatus === 'da_hoan_ung' || f.advanceStatus === 'da_quyet_toan')
   );
 
-  const totalActiveAdvance = activeAdvances.reduce((sum, f) => sum + f.amount, 0);
+  const totalActiveAdvance = activeAdvances.reduce((sum, f) => sum + (f.amount || 0), 0);
 
   // Group active advances by manager
   const managerAdvanceMap: Record<string, { total: number; count: number; items: FundTransaction[] }> = {};
@@ -98,21 +102,72 @@ export default function Finance({
     if (!managerAdvanceMap[p]) {
       managerAdvanceMap[p] = { total: 0, count: 0, items: [] };
     }
-    managerAdvanceMap[p].total += f.amount;
+    managerAdvanceMap[p].total += (f.amount || 0);
     managerAdvanceMap[p].count += 1;
     managerAdvanceMap[p].items.push(f);
   });
 
   const activeAdvancersCount = Object.values(managerAdvanceMap).filter((v) => v.total > 0).length;
 
-  // Handlers
+  // Open modal to add a new transaction
   const openAddModal = (category: FundCategory = 'thu_quy', preselectedPerson?: string) => {
     setFormError('');
+    setEditingTransId(null);
     setFormCategory(category);
     setAmount('');
     setDesc('');
-    setPerson(preselectedPerson || MANAGERS[0]);
-    setCustomPerson('');
+    setTxDate(new Date().toISOString().slice(0, 10));
+    setAdvanceStatusForm('dang_ung');
+
+    if (preselectedPerson) {
+      if (MANAGERS.includes(preselectedPerson)) {
+        setPerson(preselectedPerson);
+        setCustomPerson('');
+      } else {
+        setPerson('Khác');
+        setCustomPerson(preselectedPerson);
+      }
+    } else {
+      setPerson(MANAGERS[0]);
+      setCustomPerson('');
+    }
+
+    setIsModalOpen(true);
+  };
+
+  // Open modal to edit an existing transaction
+  const openEditModal = (trans: FundTransaction) => {
+    setFormError('');
+    setEditingTransId(trans.id);
+
+    // Determine category
+    const cat: FundCategory = trans.category || (trans.type === 'thu' ? 'thu_quy' : 'chi_tieu');
+    setFormCategory(cat);
+
+    setAmount(String(trans.amount || ''));
+    setDesc(trans.desc || '');
+
+    // Determine person
+    if (trans.person) {
+      if (MANAGERS.includes(trans.person)) {
+        setPerson(trans.person);
+        setCustomPerson('');
+      } else {
+        setPerson('Khác');
+        setCustomPerson(trans.person);
+      }
+    } else {
+      setPerson(MANAGERS[0]);
+      setCustomPerson('');
+    }
+
+    // Date
+    const d = new Date(trans.createdAt);
+    setTxDate(d.toISOString().slice(0, 10));
+
+    // Advance status
+    setAdvanceStatusForm(trans.advanceStatus || 'dang_ung');
+
     setIsModalOpen(true);
   };
 
@@ -130,19 +185,36 @@ export default function Finance({
 
     const isIncome = formCategory === 'thu_quy' || formCategory === 'hoan_ung';
 
+    // Parse date timestamp
+    let createdTimestamp = Date.now();
+    if (txDate) {
+      const parsed = new Date(txDate).getTime();
+      if (!isNaN(parsed)) {
+        createdTimestamp = parsed;
+      }
+    }
+
+    const existing = funds.find(f => f.id === editingTransId);
+
     const payload: FundTransaction = {
-      id: generateId(),
+      id: editingTransId || generateId(),
       type: isIncome ? 'thu' : 'chi',
       category: formCategory,
       amount: cash,
-      originalAmount: formCategory === 'tam_ung' ? cash : undefined,
-      advanceStatus: formCategory === 'tam_ung' ? 'dang_ung' : undefined,
+      originalAmount: formCategory === 'tam_ung' ? (existing?.originalAmount || cash) : undefined,
+      advanceStatus: formCategory === 'tam_ung' ? advanceStatusForm : undefined,
       person: (formCategory === 'tam_ung' || formCategory === 'hoan_ung' || targetPerson) ? targetPerson : undefined,
       desc: desc.trim(),
-      createdAt: Date.now(),
+      createdAt: editingTransId ? createdTimestamp : (txDate ? createdTimestamp : Date.now()),
+      settledAt: formCategory === 'tam_ung' && advanceStatusForm !== 'dang_ung' ? (existing?.settledAt || Date.now()) : undefined,
+      relatedTransactionId: existing?.relatedTransactionId
     };
 
-    onAddTransaction(payload);
+    if (editingTransId && onUpdateTransaction) {
+      onUpdateTransaction(payload);
+    } else {
+      onAddTransaction(payload);
+    }
     setIsModalOpen(false);
   };
 
@@ -248,7 +320,7 @@ export default function Finance({
             Sổ Sách & Quỹ Đơn Vị Bình Tuyền
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Minh bạch thu chi, theo dõi cán bộ tạm ứng quỹ tiền mặt và tiến độ hoàn ứng, quyết toán chứng từ.
+            Minh bạch thu chi, cho phép chỉnh sửa nội dung/số tiền/ngày tháng, theo dõi chi tiết cán bộ tạm ứng quỹ.
           </p>
         </div>
 
@@ -327,7 +399,7 @@ export default function Finance({
               Bảng Theo Dõi Cán Bộ Tạm Ứng Quỹ
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Chi tiết từng đồng chí đang ứng quỹ bao nhiêu, xử lý hoàn ứng tiền mặt hoặc chuyển quyết toán hóa đơn.
+              Chi tiết từng đồng chí đang ứng quỹ bao nhiêu, hỗ trợ chỉnh sửa, xử lý hoàn ứng tiền mặt hoặc chuyển quyết toán hóa đơn.
             </p>
           </div>
 
@@ -476,6 +548,17 @@ export default function Finance({
                           <span className="hidden md:inline">Quyết Toán Chi</span>
                         </button>
 
+                        {/* Nút Sửa Tạm Ứng */}
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(f)}
+                          className="p-1.5 text-slate-400 hover:text-blue-400 rounded transition"
+                          title="Chỉnh sửa khoản tạm ứng này"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+
+                        {/* Nút Xóa */}
                         <button
                           type="button"
                           onClick={() => {
@@ -518,7 +601,7 @@ export default function Finance({
                 {resolvedAdvances.map((rf, rIdx) => (
                   <div
                     key={`${rf.id}-${rIdx}`}
-                    className="bg-slate-950/50 border border-slate-850 p-2 rounded-lg flex items-center justify-between text-xs"
+                    className="bg-slate-950/50 border border-slate-850 p-2 rounded-lg flex items-center justify-between text-xs hover:border-slate-700 transition"
                   >
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
@@ -539,9 +622,19 @@ export default function Finance({
                       <p className="text-[11px] text-slate-400">{rf.desc}</p>
                     </div>
 
-                    <span className="font-mono font-bold text-slate-400">
-                      {new Intl.NumberFormat('vi-VN').format(rf.amount)} ₫
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-slate-400">
+                        {new Intl.NumberFormat('vi-VN').format(rf.amount)} ₫
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(rf)}
+                        className="p-1 text-slate-500 hover:text-blue-400 rounded transition"
+                        title="Chỉnh sửa bản kê này"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -704,29 +797,40 @@ export default function Finance({
                               )}
                             </div>
 
-                            <button
-                              onClick={() => {
-                                if (deleteConfirmId === f.id) {
-                                  onDeleteTransaction(f.id);
-                                  setDeleteConfirmId(null);
-                                } else {
-                                  setDeleteConfirmId(f.id);
-                                  setTimeout(() => setDeleteConfirmId(null), 3000);
-                                }
-                              }}
-                              className={`p-1 ml-2 rounded transition ${
-                                deleteConfirmId === f.id
-                                  ? 'bg-rose-500 text-white hover:bg-rose-600 opacity-100'
-                                  : 'text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100'
-                              }`}
-                              title="Xóa dòng"
-                            >
-                              {deleteConfirmId === f.id ? (
-                                <span className="text-[10px] font-bold">Xóa?</span>
-                              ) : (
-                                <Trash2 className="h-3.5 w-3.5" />
-                              )}
-                            </button>
+                            {/* Action Buttons: Edit and Delete */}
+                            <div className="flex items-center gap-1 ml-2 opacity-80 sm:opacity-0 group-hover:opacity-100 transition">
+                              <button
+                                onClick={() => openEditModal(f)}
+                                className="p-1.5 text-slate-400 hover:text-blue-400 rounded transition"
+                                title="Chỉnh sửa giao dịch này"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  if (deleteConfirmId === f.id) {
+                                    onDeleteTransaction(f.id);
+                                    setDeleteConfirmId(null);
+                                  } else {
+                                    setDeleteConfirmId(f.id);
+                                    setTimeout(() => setDeleteConfirmId(null), 3000);
+                                  }
+                                }}
+                                className={`p-1.5 rounded transition ${
+                                  deleteConfirmId === f.id
+                                    ? 'bg-rose-500 text-white hover:bg-rose-600 opacity-100'
+                                    : 'text-slate-500 hover:text-rose-400'
+                                }`}
+                                title="Xóa dòng"
+                              >
+                                {deleteConfirmId === f.id ? (
+                                  <span className="text-[10px] font-bold">Xóa?</span>
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                              </button>
+                            </div>
                           </div>
                         </td>
                         <td className={`px-5 py-3.5 text-right font-bold text-sm font-mono whitespace-nowrap ${
@@ -743,14 +847,23 @@ export default function Finance({
         </div>
       </div>
 
-      {/* MODAL 1: ADD NEW TRANSACTION / TẠM ỨNG / THU CHI */}
+      {/* MODAL 1: ADD OR EDIT TRANSACTION / TẠM ỨNG / THU CHI */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-5 sm:p-6 text-slate-300 shadow-2xl">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3.5 mb-3.5">
               <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
-                <Landmark className="h-4.5 w-4.5 text-emerald-400" />
-                Khai Báo Giao Dịch Sổ Quỹ
+                {editingTransId ? (
+                  <>
+                    <Edit2 className="h-4.5 w-4.5 text-blue-400" />
+                    Chỉnh Sửa Bản Kê Giao Dịch
+                  </>
+                ) : (
+                  <>
+                    <Landmark className="h-4.5 w-4.5 text-emerald-400" />
+                    Khai Báo Giao Dịch Sổ Quỹ
+                  </>
+                )}
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -816,7 +929,71 @@ export default function Finance({
                 </button>
               </div>
 
-              {/* Officer Selection (Required for Tạm ứng & Hoàn ứng, optional for others) */}
+              {/* Date and Advance Status (if applicable) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">
+                    Ngày giao dịch
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={txDate}
+                    onChange={(e) => setTxDate(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+
+                {formCategory === 'tam_ung' ? (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
+                      Trạng thái tạm ứng
+                    </label>
+                    <select
+                      value={advanceStatusForm}
+                      onChange={(e) => setAdvanceStatusForm(e.target.value as AdvanceStatus)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs focus:outline-none text-amber-300 font-semibold cursor-pointer"
+                    >
+                      <option value="dang_ung">Đang tạm ứng</option>
+                      <option value="da_hoan_ung">Đã hoàn tiền mặt</option>
+                      <option value="da_quyet_toan">Đã quyết toán chứng từ</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
+                      Số tiền thực tế (₫) (*)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="Ví dụ: 1500000"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded p-2 font-bold font-mono text-xs text-emerald-400 focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* If Category is tam_ung, amount is placed below */}
+              {formCategory === 'tam_ung' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">
+                    Số tiền tạm ứng (₫) (*)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="Ví dụ: 1500000"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded p-2.5 font-bold font-mono text-sm text-amber-400 focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+              )}
+
+              {/* Officer Selection */}
               <div>
                 <label className="block text-xs font-semibold text-slate-400 mb-1">
                   Cán bộ liên quan {(formCategory === 'tam_ung' || formCategory === 'hoan_ung') ? '(*)' : '(tuỳ chọn)'}
@@ -845,21 +1022,6 @@ export default function Finance({
                     />
                   )}
                 </div>
-              </div>
-
-              {/* Amount */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
-                  Số tiền thực tế (₫) (*)
-                </label>
-                <input
-                  type="number"
-                  required
-                  placeholder="Ví dụ: 1500000"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded p-2.5 font-bold font-mono text-sm text-emerald-400 focus:border-emerald-500 focus:outline-none"
-                />
               </div>
 
               {/* Description */}
@@ -899,9 +1061,10 @@ export default function Finance({
                 </button>
                 <button
                   type="submit"
-                  className="py-2 px-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-bold shadow transition"
+                  className="py-2 px-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-bold shadow transition flex items-center gap-1.5"
                 >
-                  Lưu Giao Dịch
+                  {editingTransId ? <Edit2 className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                  <span>{editingTransId ? 'Lưu Cập Nhật' : 'Lưu Giao Dịch'}</span>
                 </button>
               </div>
             </form>
