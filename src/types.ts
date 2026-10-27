@@ -67,6 +67,20 @@ export interface FundTransaction {
   createdAt: number;
 }
 
+export type SettlementStatus = 'chua_ket_toan' | 'dang_ket_toan' | 'da_ket_toan';
+
+export interface SettlementStage {
+  id: string;
+  stageName: string;
+  amount: number;
+  percentage?: number;
+  destination: 'quy_to' | 'khac';
+  date: string;
+  notes?: string;
+  fundTransactionId?: string;
+  createdAt: number;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -75,6 +89,8 @@ export interface Project {
   value: number; // Thu nhập
   cost: number;  // Chi phí
   status: 'Khảo sát' | 'Thi công' | 'Nghiệm thu' | 'Đã kết toán';
+  settlementStatus?: SettlementStatus; // Trạng thái kết toán quỹ: 'chua_ket_toan' | 'dang_ket_toan' | 'da_ket_toan'
+  settlementHistory?: SettlementStage[]; // Lịch sử chi kết toán theo từng giai đoạn
   deadline: string;
   createdAt: number;
 }

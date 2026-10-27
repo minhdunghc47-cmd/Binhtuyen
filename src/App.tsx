@@ -264,15 +264,16 @@ export default function App() {
     triggerCloudSync('DELETE', 'projects', { id });
   };
 
-  const handleSettleProfitToQuỹ = (amount: number, desc: string) => {
+  const handleSettleProfitToQuỹ = (amount: number, desc: string, customId?: string): string => {
     const newTrans: FundTransaction = {
-      id: generateId(),
+      id: customId || generateId(),
       type: 'thu',
       amount,
       desc,
       createdAt: Date.now()
     };
     handleAddTransaction(newTrans);
+    return newTrans.id;
   };
 
   // Triggers Zalo messaging draft copied
@@ -534,6 +535,7 @@ export default function App() {
                 onUpdateProject={handleUpdateProject}
                 onDeleteProject={handleDeleteProject}
                 onSettleProfitToQuỹ={handleSettleProfitToQuỹ}
+                onDeleteTransaction={handleDeleteTransaction}
               />
             )}
           </div>

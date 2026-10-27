@@ -108,7 +108,7 @@ export default function AIChatBot({
 - Số cơ sở Nhóm 1: ${facilities.filter(f => f.group === 'Nhóm 1').length}
 - Số cơ sở Nhóm 2: ${facilities.filter(f => f.group === 'Nhóm 2').length}
 - Tổng quỹ Đội hiện tại: ${balance.toLocaleString('vi-VN')} VNĐ
-- Tổng số dự án thi công: ${projects.length}
+- Tổng số dự án thi công: ${projects.length} (Đã kết toán: ${projects.filter(p => (p.settlementStatus === 'da_ket_toan' || p.status === 'Đã kết toán')).length}, Đang kết toán: ${projects.filter(p => p.settlementStatus === 'dang_ket_toan').length}, Chưa kết toán: ${projects.filter(p => (!p.settlementStatus || p.settlementStatus === 'chua_ket_toan') && p.status !== 'Đã kết toán').length})
 - Các cán bộ quản lý: ${MANAGERS.join(', ')}
 
 *** SỔ TAY TRÍ TUỆ (QUY TẮC ĐÃ HỌC TỪ CÁN BỘ) ***

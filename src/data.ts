@@ -233,6 +233,7 @@ export const INITIAL_PROJECTS: Project[] = [
     value: 120000000, // 120 Millions
     cost: 85000000,   // 85 Millions -> Profit 35M
     status: 'Thi công',
+    settlementStatus: 'chua_ket_toan',
     deadline: '2026-07-15',
     createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000
   },
@@ -244,6 +245,7 @@ export const INITIAL_PROJECTS: Project[] = [
     value: 24000000,
     cost: 16000000,  // Profit 8M
     status: 'Khảo sát',
+    settlementStatus: 'chua_ket_toan',
     deadline: '2026-06-30',
     createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000
   },
@@ -255,6 +257,19 @@ export const INITIAL_PROJECTS: Project[] = [
     value: 45000000,
     cost: 30000000,  // Profit 15M
     status: 'Nghiệm thu',
+    settlementStatus: 'dang_ket_toan',
+    settlementHistory: [
+      {
+        id: 'set-1',
+        stageName: 'Đợt 1 - Tạm ứng sau lắp đặt khung sắt',
+        amount: 4500000,
+        percentage: 30,
+        destination: 'quy_to',
+        date: '2026-06-20',
+        notes: 'Trích nộp 30% lợi nhuận đợt 1 vào Quỹ Tổ',
+        createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000
+      }
+    ],
     deadline: '2026-06-19',
     createdAt: Date.now() - 25 * 24 * 60 * 60 * 1000
   }
