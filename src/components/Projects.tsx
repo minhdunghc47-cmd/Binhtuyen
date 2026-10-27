@@ -23,7 +23,9 @@ import {
   Building2,
   Layers,
   ArrowRight,
-  Receipt
+  Receipt,
+  List,
+  LayoutGrid
 } from 'lucide-react';
 import { MANAGERS, generateId } from '../data';
 
@@ -65,7 +67,8 @@ export default function Projects({
   const [formError, setFormError] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-  // Filter & Search states
+  // Filter, View & Search states
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [filterSettlement, setFilterSettlement] = useState<'all' | SettlementStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -390,219 +393,437 @@ export default function Projects({
           </button>
         </div>
 
-        {/* Search input */}
-        <div className="relative w-full md:w-64">
-          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm tên công trình, CĐT..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500"
-          />
+        {/* Search input & View Mode Switcher */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Tìm tên công trình, CĐT..."
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500"
+            />
+          </div>
+
+          <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800 shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-2 py-1 rounded transition flex items-center gap-1 text-xs font-bold ${
+                viewMode === 'list'
+                  ? 'bg-slate-800 text-indigo-300 shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Xem dạng danh sách gọn gàng"
+            >
+              <List className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Danh sách</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`px-2 py-1 rounded transition flex items-center gap-1 text-xs font-bold ${
+                viewMode === 'grid'
+                  ? 'bg-slate-800 text-indigo-300 shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Xem dạng thẻ"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Thẻ</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Projects Grid List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredProjects.map((p, idx) => {
-          const profit = p.value - p.cost;
-          const totalSettled = getTotalSettled(p);
-          const stageCount = p.settlementHistory?.length || 0;
-          const sStatus = getSettlementStatus(p);
-
-          // Work Progress state color
-          let progressColor = 'bg-slate-950 text-slate-400 border-slate-800';
-          if (p.status === 'Khảo sát') progressColor = 'bg-blue-950/40 text-blue-400 border-blue-900/40';
-          else if (p.status === 'Thi công') progressColor = 'bg-orange-950/40 text-orange-400 border-orange-900/40';
-          else if (p.status === 'Nghiệm thu') progressColor = 'bg-yellow-950/40 text-yellow-500 border-yellow-900/30';
-          else if (p.status === 'Đã kết toán') progressColor = 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30';
-
-          // Settlement Status Badge styling
-          let settleBadge = (
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-950 text-slate-400 border-slate-800 flex items-center gap-1">
-              <Clock className="h-3 w-3 text-slate-500" />
-              Chưa kết toán
-            </span>
-          );
-
-          if (sStatus === 'dang_ket_toan') {
-            settleBadge = (
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-amber-950/40 text-amber-400 border-amber-800/40 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-amber-400" />
-                Đang kết toán ({stageCount} đợt)
-              </span>
-            );
-          } else if (sStatus === 'da_ket_toan') {
-            settleBadge = (
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-emerald-950/40 text-emerald-400 border-emerald-800/40 flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                Đã kết toán {stageCount > 0 ? `(${stageCount} đợt)` : ''}
-              </span>
-            );
-          }
-
-          // Progress percentage
-          const pctSettled = profit > 0 ? Math.min(100, Math.round((totalSettled / profit) * 100)) : 0;
-
-          return (
-            <div 
-              key={`${p.id}-${idx}`} 
-              className="bg-slate-900/80 border border-slate-800 rounded-xl p-5 space-y-4 flex flex-col justify-between hover:border-slate-700 transition-colors shadow-sm"
-            >
-              {/* Card Upper */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-start gap-2">
-                  <h3 className="font-bold text-sm text-slate-100 leading-snug">
-                    {p.name}
-                  </h3>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${progressColor}`}>
-                      {p.status}
-                    </span>
-                    {settleBadge}
-                  </div>
-                </div>
-
-                <div className="text-xs text-slate-400 space-y-1 font-semibold">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-slate-500" />
-                    <span>CĐT: {p.client || 'Chưa định danh'}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-slate-400 font-bold">
-                    <UserCheck className="h-3.5 w-3.5 text-slate-500" />
-                    <span className="text-blue-400">Đồng chí phụ trách: {p.assignee}</span>
-                  </div>
-                </div>
-
-                {/* Economic Figures ledger sheet inside card */}
-                <div className="grid grid-cols-3 gap-2 bg-slate-950/60 p-2.5 rounded-lg border border-slate-850 text-xs select-none">
-                  <div>
-                    <span className="text-[10px] text-slate-500 block">GIÁ THU CĐT</span>
-                    <span className="font-bold text-slate-300">{new Intl.NumberFormat('vi-VN').format(p.value)} ₫</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 block">GIÁ CỐT CHI</span>
-                    <span className="font-bold text-slate-300">{new Intl.NumberFormat('vi-VN').format(p.cost)} ₫</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 block">LỢI NHUẬN</span>
-                    <span className={`font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {new Intl.NumberFormat('vi-VN').format(profit)} ₫
-                    </span>
-                  </div>
-                </div>
-
-                {/* Settlement Stage Visual Ledger Progress */}
-                <div className="bg-slate-950/40 p-2.5 rounded-lg border border-slate-850/80 space-y-1.5">
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 flex items-center gap-1 font-semibold">
-                      <Coins className="h-3.5 w-3.5 text-indigo-400" />
-                      Chi kết toán quỹ:
-                    </span>
-                    <span className="font-mono font-bold text-indigo-300">
-                      {new Intl.NumberFormat('vi-VN').format(totalSettled)} ₫ 
-                      {profit > 0 && <span className="text-slate-500 font-normal ml-1">({pctSettled}%)</span>}
-                    </span>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        sStatus === 'da_ket_toan' 
-                          ? 'bg-emerald-500' 
-                          : sStatus === 'dang_ket_toan' 
-                            ? 'bg-amber-400' 
-                            : 'bg-slate-600'
-                      }`}
-                      style={{ width: `${Math.min(100, pctSettled)}%` }}
-                    />
-                  </div>
-
-                  <div className="flex justify-between items-center text-[10px] text-slate-500 pt-0.5">
-                    <span>{stageCount} giai đoạn đã chi</span>
-                    <span>
-                      {profit - totalSettled > 0 ? (
-                        <>Còn lại: <strong className="text-slate-400 font-mono">{new Intl.NumberFormat('vi-VN').format(profit - totalSettled)} ₫</strong></>
-                      ) : (
-                        <span className="text-emerald-400 font-semibold">Đã kết toán đủ</span>
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Action Drawer Footer */}
-              <div className="flex justify-between items-center pt-3 border-t border-slate-800/80 text-xs">
-                <span className="text-slate-400 font-mono text-[10px] flex items-center gap-1">
-                  <CalendarClock className="h-3.5 w-3.5 text-slate-500" />
-                  Hẹn: {p.deadline ? new Date(p.deadline).toLocaleDateString('vi-VN') : 'Không hạn'}
-                </span>
-
-                <div className="flex items-center gap-1.5">
-                  {/* Settlement Stage Action Button */}
-                  <button
-                    onClick={() => handleOpenSettle(p)}
-                    className={`px-3 py-1.5 font-bold rounded text-[11px] flex items-center gap-1.5 transition shadow-sm ${
-                      sStatus === 'da_ket_toan'
-                        ? 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/60'
-                        : sStatus === 'dang_ket_toan'
-                          ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                          : 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                    }`}
-                  >
-                    <Coins className="h-3.5 w-3.5" />
-                    <span>
-                      {sStatus === 'da_ket_toan'
-                        ? 'Sổ Kết Toán'
-                        : sStatus === 'dang_ket_toan'
-                          ? `Tiếp Tục Kết Toán (Đợt ${stageCount + 1})`
-                          : 'Chi Kết Toán Quỹ'}
-                    </span>
-                  </button>
-                  
-                  <button
-                    onClick={() => openFormModal(p)}
-                    title="Chỉnh sửa thông tin dự án"
-                    className="p-1.5 text-slate-400 hover:text-blue-400 rounded transition"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (deleteConfirmId === p.id) {
-                        onDeleteProject(p.id);
-                        setDeleteConfirmId(null);
-                      } else {
-                        setDeleteConfirmId(p.id);
-                        setTimeout(() => setDeleteConfirmId(null), 3000);
-                      }
-                    }}
-                    title="Xóa dự án"
-                    className={`p-1.5 rounded transition ${
-                      deleteConfirmId === p.id
-                        ? 'bg-rose-500 text-white hover:bg-rose-600'
-                        : 'text-slate-500 hover:text-rose-400'
-                    }`}
-                  >
-                    {deleteConfirmId === p.id ? (
-                      <span className="text-[10px] font-bold">Xóa?</span>
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filteredProjects.length === 0 && (
+      {/* Projects Display: List View vs Grid Cards */}
+      {filteredProjects.length === 0 ? (
         <div className="text-center py-16 text-slate-500 bg-slate-900/20 border border-dashed border-slate-800 rounded-xl italic">
           Không tìm thấy công trình thi công nào phù hợp với bộ lọc.
+        </div>
+      ) : viewMode === 'list' ? (
+        /* GIAO DIỆN DẠNG DANH SÁCH GỌN GÀNG */
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-800 text-xs md:text-sm">
+              <thead>
+                <tr className="bg-slate-950/40 text-slate-400 text-left">
+                  <th className="px-4 py-3 font-semibold">Tên công trình & Chủ đầu tư</th>
+                  <th className="px-3 py-3 font-semibold whitespace-nowrap">Cán bộ PT</th>
+                  <th className="px-3 py-3 font-semibold whitespace-nowrap">Tiến trình</th>
+                  <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">Giá HĐ / Lợi nhuận</th>
+                  <th className="px-4 py-3 font-semibold whitespace-nowrap">Kết toán quỹ</th>
+                  <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60 bg-transparent">
+                {filteredProjects.map((p, idx) => {
+                  const profit = p.value - p.cost;
+                  const totalSettled = getTotalSettled(p);
+                  const stageCount = p.settlementHistory?.length || 0;
+                  const sStatus = getSettlementStatus(p);
+
+                  // Work Progress state color
+                  let progressColor = 'bg-slate-950 text-slate-400 border-slate-800';
+                  if (p.status === 'Khảo sát') progressColor = 'bg-blue-950/40 text-blue-400 border-blue-900/40';
+                  else if (p.status === 'Thi công') progressColor = 'bg-orange-950/40 text-orange-400 border-orange-900/40';
+                  else if (p.status === 'Nghiệm thu') progressColor = 'bg-yellow-950/40 text-yellow-500 border-yellow-900/30';
+                  else if (p.status === 'Đã kết toán') progressColor = 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30';
+
+                  // Settlement Badge
+                  let settleBadge = (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-950 text-slate-400 border-slate-800 flex items-center gap-1 w-fit">
+                      <Clock className="h-3 w-3 text-slate-500" />
+                      Chưa kết toán
+                    </span>
+                  );
+
+                  if (sStatus === 'dang_ket_toan') {
+                    settleBadge = (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-amber-950/40 text-amber-400 border-amber-800/40 flex items-center gap-1 w-fit">
+                        <TrendingUp className="h-3 w-3 text-amber-400" />
+                        Đang kết toán ({stageCount} đợt)
+                      </span>
+                    );
+                  } else if (sStatus === 'da_ket_toan') {
+                    settleBadge = (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-emerald-950/40 text-emerald-400 border-emerald-800/40 flex items-center gap-1 w-fit">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                        Đã kết toán {stageCount > 0 ? `(${stageCount} đợt)` : ''}
+                      </span>
+                    );
+                  }
+
+                  const pctSettled = profit > 0 ? Math.min(100, Math.round((totalSettled / profit) * 100)) : 0;
+
+                  return (
+                    <tr key={`${p.id}-${idx}`} className="hover:bg-slate-800/30 transition-colors">
+                      {/* Name & Client */}
+                      <td className="px-4 py-3">
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-slate-100 block text-xs md:text-sm leading-snug">
+                            {p.name}
+                          </span>
+                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-slate-400">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3 text-slate-500" />
+                              CĐT: <strong className="text-slate-300 font-normal">{p.client || 'Chưa định danh'}</strong>
+                            </span>
+                            {p.deadline && (
+                              <span className="flex items-center gap-1 font-mono text-slate-500 text-[10px]">
+                                <CalendarClock className="h-3 w-3 text-slate-500" />
+                                Hẹn: {new Date(p.deadline).toLocaleDateString('vi-VN')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Assignee */}
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <span className="px-2 py-1 rounded-md text-[11px] font-semibold bg-blue-950/40 text-blue-300 border border-blue-900/30 flex items-center gap-1 w-fit">
+                          <UserCheck className="h-3 w-3 text-blue-400" />
+                          {p.assignee}
+                        </span>
+                      </td>
+
+                      {/* Work Status */}
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${progressColor}`}>
+                          {p.status}
+                        </span>
+                      </td>
+
+                      {/* Financial Figures */}
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="font-mono text-xs">
+                          <div className="text-slate-200 font-bold">
+                            {new Intl.NumberFormat('vi-VN').format(p.value)} ₫
+                          </div>
+                          <div className={`text-[11px] font-semibold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            Lãi: {new Intl.NumberFormat('vi-VN').format(profit)} ₫
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Settlement Status & Progress */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="space-y-1 min-w-[140px]">
+                          {settleBadge}
+                          {totalSettled > 0 ? (
+                            <div className="space-y-0.5">
+                              <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
+                                <span>Chi: {new Intl.NumberFormat('vi-VN').format(totalSettled)} ₫</span>
+                                <span>{pctSettled}%</span>
+                              </div>
+                              <div className="w-full bg-slate-800 rounded-full h-1 overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full ${sStatus === 'da_ket_toan' ? 'bg-emerald-500' : 'bg-amber-400'}`}
+                                  style={{ width: `${Math.min(100, pctSettled)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 block">Chưa trích quỹ</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Action buttons */}
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenSettle(p)}
+                            className={`px-2.5 py-1 font-bold rounded text-[11px] flex items-center gap-1 transition shadow-sm ${
+                              sStatus === 'da_ket_toan'
+                                ? 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/60'
+                                : sStatus === 'dang_ket_toan'
+                                  ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                                  : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                            }`}
+                            title="Mở sổ kết toán quỹ"
+                          >
+                            <Coins className="h-3 w-3" />
+                            <span>{sStatus === 'da_ket_toan' ? 'Sổ KT' : sStatus === 'dang_ket_toan' ? `Đợt ${stageCount + 1}` : 'Kết toán'}</span>
+                          </button>
+
+                          <button
+                            onClick={() => openFormModal(p)}
+                            title="Chỉnh sửa công trình"
+                            className="p-1.5 text-slate-400 hover:text-blue-400 rounded hover:bg-slate-800 transition"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              if (deleteConfirmId === p.id) {
+                                onDeleteProject(p.id);
+                                setDeleteConfirmId(null);
+                              } else {
+                                setDeleteConfirmId(p.id);
+                                setTimeout(() => setDeleteConfirmId(null), 3000);
+                              }
+                            }}
+                            title="Xóa công trình"
+                            className={`p-1.5 rounded transition ${
+                              deleteConfirmId === p.id
+                                ? 'bg-rose-500 text-white hover:bg-rose-600'
+                                : 'text-slate-500 hover:text-rose-400 hover:bg-slate-800'
+                            }`}
+                          >
+                            {deleteConfirmId === p.id ? (
+                              <span className="text-[10px] font-bold">Xóa?</span>
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        /* GIAO DIỆN DẠNG THẺ (GRID CARDS) */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredProjects.map((p, idx) => {
+            const profit = p.value - p.cost;
+            const totalSettled = getTotalSettled(p);
+            const stageCount = p.settlementHistory?.length || 0;
+            const sStatus = getSettlementStatus(p);
+
+            // Work Progress state color
+            let progressColor = 'bg-slate-950 text-slate-400 border-slate-800';
+            if (p.status === 'Khảo sát') progressColor = 'bg-blue-950/40 text-blue-400 border-blue-900/40';
+            else if (p.status === 'Thi công') progressColor = 'bg-orange-950/40 text-orange-400 border-orange-900/40';
+            else if (p.status === 'Nghiệm thu') progressColor = 'bg-yellow-950/40 text-yellow-500 border-yellow-900/30';
+            else if (p.status === 'Đã kết toán') progressColor = 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30';
+
+            // Settlement Status Badge styling
+            let settleBadge = (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-950 text-slate-400 border-slate-800 flex items-center gap-1">
+                <Clock className="h-3 w-3 text-slate-500" />
+                Chưa kết toán
+              </span>
+            );
+
+            if (sStatus === 'dang_ket_toan') {
+              settleBadge = (
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-amber-950/40 text-amber-400 border-amber-800/40 flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3 text-amber-400" />
+                  Đang kết toán ({stageCount} đợt)
+                </span>
+              );
+            } else if (sStatus === 'da_ket_toan') {
+              settleBadge = (
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-emerald-950/40 text-emerald-400 border-emerald-800/40 flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                  Đã kết toán {stageCount > 0 ? `(${stageCount} đợt)` : ''}
+                </span>
+              );
+            }
+
+            // Progress percentage
+            const pctSettled = profit > 0 ? Math.min(100, Math.round((totalSettled / profit) * 100)) : 0;
+
+            return (
+              <div 
+                key={`${p.id}-${idx}`} 
+                className="bg-slate-900/80 border border-slate-800 rounded-xl p-5 space-y-4 flex flex-col justify-between hover:border-slate-700 transition-colors shadow-sm"
+              >
+                {/* Card Upper */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="font-bold text-sm text-slate-100 leading-snug">
+                      {p.name}
+                    </h3>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${progressColor}`}>
+                        {p.status}
+                      </span>
+                      {settleBadge}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-400 space-y-1 font-semibold">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                      <span>CĐT: {p.client || 'Chưa định danh'}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-400 font-bold">
+                      <UserCheck className="h-3.5 w-3.5 text-slate-500" />
+                      <span className="text-blue-400">Đồng chí phụ trách: {p.assignee}</span>
+                    </div>
+                  </div>
+
+                  {/* Economic Figures ledger sheet inside card */}
+                  <div className="grid grid-cols-3 gap-2 bg-slate-950/60 p-2.5 rounded-lg border border-slate-850 text-xs select-none">
+                    <div>
+                      <span className="text-[10px] text-slate-500 block">GIÁ THU CĐT</span>
+                      <span className="font-bold text-slate-300">{new Intl.NumberFormat('vi-VN').format(p.value)} ₫</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 block">GIÁ CỐT CHI</span>
+                      <span className="font-bold text-slate-300">{new Intl.NumberFormat('vi-VN').format(p.cost)} ₫</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 block">LỢI NHUẬN</span>
+                      <span className={`font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {new Intl.NumberFormat('vi-VN').format(profit)} ₫
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Settlement Stage Visual Ledger Progress */}
+                  <div className="bg-slate-950/40 p-2.5 rounded-lg border border-slate-850/80 space-y-1.5">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 flex items-center gap-1 font-semibold">
+                        <Coins className="h-3.5 w-3.5 text-indigo-400" />
+                        Chi kết toán quỹ:
+                      </span>
+                      <span className="font-mono font-bold text-indigo-300">
+                        {new Intl.NumberFormat('vi-VN').format(totalSettled)} ₫ 
+                        {profit > 0 && <span className="text-slate-500 font-normal ml-1">({pctSettled}%)</span>}
+                      </span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          sStatus === 'da_ket_toan' 
+                            ? 'bg-emerald-500' 
+                            : sStatus === 'dang_ket_toan' 
+                              ? 'bg-amber-400' 
+                              : 'bg-slate-600'
+                        }`}
+                        style={{ width: `${Math.min(100, pctSettled)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center text-[10px] text-slate-500 pt-0.5">
+                      <span>{stageCount} giai đoạn đã chi</span>
+                      <span>
+                        {profit - totalSettled > 0 ? (
+                          <>Còn lại: <strong className="text-slate-400 font-mono">{new Intl.NumberFormat('vi-VN').format(profit - totalSettled)} ₫</strong></>
+                        ) : (
+                          <span className="text-emerald-400 font-semibold">Đã kết toán đủ</span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Action Drawer Footer */}
+                <div className="flex justify-between items-center pt-3 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400 font-mono text-[10px] flex items-center gap-1">
+                    <CalendarClock className="h-3.5 w-3.5 text-slate-500" />
+                    Hẹn: {p.deadline ? new Date(p.deadline).toLocaleDateString('vi-VN') : 'Không hạn'}
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    {/* Settlement Stage Action Button */}
+                    <button
+                      onClick={() => handleOpenSettle(p)}
+                      className={`px-3 py-1.5 font-bold rounded text-[11px] flex items-center gap-1.5 transition shadow-sm ${
+                        sStatus === 'da_ket_toan'
+                          ? 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/60'
+                          : sStatus === 'dang_ket_toan'
+                            ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                            : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                      }`}
+                    >
+                      <Coins className="h-3.5 w-3.5" />
+                      <span>
+                        {sStatus === 'da_ket_toan'
+                          ? 'Sổ Kết Toán'
+                          : sStatus === 'dang_ket_toan'
+                            ? `Tiếp Tục Kết Toán (Đợt ${stageCount + 1})`
+                            : 'Chi Kết Toán Quỹ'}
+                      </span>
+                    </button>
+                    
+                    <button
+                      onClick={() => openFormModal(p)}
+                      title="Chỉnh sửa thông tin dự án"
+                      className="p-1.5 text-slate-400 hover:text-blue-400 rounded transition"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (deleteConfirmId === p.id) {
+                          onDeleteProject(p.id);
+                          setDeleteConfirmId(null);
+                        } else {
+                          setDeleteConfirmId(p.id);
+                          setTimeout(() => setDeleteConfirmId(null), 3000);
+                        }
+                      }}
+                      title="Xóa dự án"
+                      className={`p-1.5 rounded transition ${
+                        deleteConfirmId === p.id
+                          ? 'bg-rose-500 text-white hover:bg-rose-600'
+                          : 'text-slate-500 hover:text-rose-400'
+                      }`}
+                    >
+                      {deleteConfirmId === p.id ? (
+                        <span className="text-[10px] font-bold">Xóa?</span>
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
