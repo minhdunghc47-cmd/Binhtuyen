@@ -235,6 +235,13 @@ export default function App() {
     triggerCloudSync('ADD', 'funds', newTrans);
   };
 
+  const handleUpdateTransaction = (updatedTrans: FundTransaction) => {
+    const updated = funds.map((f) => (f.id === updatedTrans.id ? updatedTrans : f));
+    setFunds(updated);
+    saveAllData({ funds: updated });
+    triggerCloudSync('UPDATE', 'funds', updatedTrans);
+  };
+
   const handleDeleteTransaction = (id: string) => {
     const updated = funds.filter((f) => f.id !== id);
     setFunds(updated);
@@ -524,6 +531,7 @@ export default function App() {
               <Finance
                 funds={funds}
                 onAddTransaction={handleAddTransaction}
+                onUpdateTransaction={handleUpdateTransaction}
                 onDeleteTransaction={handleDeleteTransaction}
               />
             )}

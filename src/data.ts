@@ -221,6 +221,17 @@ export const INITIAL_FUNDS: FundTransaction[] = [
     amount: 2500000,
     desc: 'Chi bồi dưỡng hội thao nghiệp vụ PCCC & CNCH địa bàn cụm công nghiệp Hải Long',
     createdAt: Date.now() - 15 * 24 * 60 * 60 * 1000
+  },
+  {
+    id: 'fund-5',
+    type: 'chi',
+    category: 'tam_ung',
+    person: 'Đ/c Dũng',
+    amount: 1500000,
+    originalAmount: 1500000,
+    desc: 'Tạm ứng mua phụ kiện bình bọt CO2 và vật tư bảo hộ kiểm tra cơ sở',
+    advanceStatus: 'dang_ung',
+    createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000
   }
 ];
 

@@ -59,12 +59,21 @@ export interface Task {
   createdAt: number;
 }
 
+export type FundCategory = 'thu_quy' | 'chi_tieu' | 'tam_ung' | 'hoan_ung';
+export type AdvanceStatus = 'dang_ung' | 'da_hoan_ung' | 'da_quyet_toan';
+
 export interface FundTransaction {
   id: string;
   type: 'thu' | 'chi';
   amount: number;
   desc: string;
   createdAt: number;
+  category?: FundCategory;
+  person?: string; // Tên cán bộ tạm ứng / nộp tiền
+  advanceStatus?: AdvanceStatus; // Trạng thái nếu là tạm ứng
+  originalAmount?: number; // Số tiền ban đầu khi ứng
+  settledAt?: number; // Thời điểm hoàn ứng hoặc quyết toán
+  relatedTransactionId?: string;
 }
 
 export type SettlementStatus = 'chua_ket_toan' | 'dang_ket_toan' | 'da_ket_toan';
