@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FundTransaction, FundCategory, AdvanceStatus } from '../types';
 import { 
   Wallet, 
@@ -78,16 +78,50 @@ export default function Finance({
 
   const cashBalance = totalIn - totalOut;
 
-  // Active Advances (Cán bộ đang tạm ứng chưa hoàn trả)
+  // Helper to calculate remaining advance debt for a transaction
+  const getRemainingAdvance = (f: FundTransaction): number => {
+    if (f.advanceStatus === 'da_hoan_ung' || f.advanceStatus === 'da_quyet_toan') return 0;
+    const refunded = f.refundedAmount || 0;
+    return Math.max(0, (f.amount || 0) - refunded);
+  };
+
+  // Auto-heal legacy data where an advance had its amount prematurely reduced by refundCash
+  useEffect(() => {
+    if (!onUpdateTransaction) return;
+
+    funds.forEach((f) => {
+      if (f.category === 'tam_ung') {
+        const relatedRefunds = funds.filter(
+          (r) => r.category === 'hoan_ung' && r.relatedTransactionId === f.id
+        );
+        const sumRefunds = relatedRefunds.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+        // If refunds exist but f.refundedAmount was not set, restore true advance amount
+        if (sumRefunds > 0 && (!f.refundedAmount || f.refundedAmount === 0)) {
+          const original = f.originalAmount || (f.amount + sumRefunds);
+          onUpdateTransaction({
+            ...f,
+            amount: original,
+            originalAmount: original,
+            refundedAmount: sumRefunds,
+            advanceStatus: sumRefunds >= original ? 'da_hoan_ung' : 'dang_ung',
+            settledAt: sumRefunds >= original ? (f.settledAt || Date.now()) : undefined,
+          });
+        }
+      }
+    });
+  }, [funds, onUpdateTransaction]);
+
+  // Active Advances (Cán bộ đang tạm ứng chưa hoàn trả hết)
   const activeAdvances = funds.filter(
-    (f) => f.category === 'tam_ung' && (!f.advanceStatus || f.advanceStatus === 'dang_ung')
+    (f) => f.category === 'tam_ung' && (!f.advanceStatus || f.advanceStatus === 'dang_ung') && getRemainingAdvance(f) > 0
   );
 
   const resolvedAdvances = funds.filter(
-    (f) => f.category === 'tam_ung' && (f.advanceStatus === 'da_hoan_ung' || f.advanceStatus === 'da_quyet_toan')
+    (f) => f.category === 'tam_ung' && (f.advanceStatus === 'da_hoan_ung' || f.advanceStatus === 'da_quyet_toan' || getRemainingAdvance(f) <= 0)
   );
 
-  const totalActiveAdvance = activeAdvances.reduce((sum, f) => sum + (f.amount || 0), 0);
+  const totalActiveAdvance = activeAdvances.reduce((sum, f) => sum + getRemainingAdvance(f), 0);
 
   // Group active advances by manager
   const managerAdvanceMap: Record<string, { total: number; count: number; items: FundTransaction[] }> = {};
@@ -102,7 +136,7 @@ export default function Finance({
     if (!managerAdvanceMap[p]) {
       managerAdvanceMap[p] = { total: 0, count: 0, items: [] };
     }
-    managerAdvanceMap[p].total += (f.amount || 0);
+    managerAdvanceMap[p].total += getRemainingAdvance(f);
     managerAdvanceMap[p].count += 1;
     managerAdvanceMap[p].items.push(f);
   });
@@ -222,7 +256,8 @@ export default function Finance({
   const handleOpenRefund = (advance: FundTransaction) => {
     setRefundError('');
     setSelectedAdvance(advance);
-    setRefundAmount(String(advance.amount));
+    const remainingDebt = getRemainingAdvance(advance);
+    setRefundAmount(String(remainingDebt));
     setRefundDesc(`Thu hoàn ứng tiền mặt: ${advance.person || 'Cán bộ'} hoàn trả khoản ${advance.desc}`);
     setIsRefundModalOpen(true);
   };
@@ -237,8 +272,12 @@ export default function Finance({
     if (!refundCash || refundCash <= 0) {
       return setRefundError('Số tiền hoàn trả phải lớn hơn 0!');
     }
-    if (refundCash > selectedAdvance.amount) {
-      return setRefundError(`Số tiền hoàn trả không được vượt quá số tiền đang ứng (${new Intl.NumberFormat('vi-VN').format(selectedAdvance.amount)} ₫)!`);
+
+    const currentRefunded = selectedAdvance.refundedAmount || 0;
+    const remainingDebt = Math.max(0, (selectedAdvance.amount || 0) - currentRefunded);
+
+    if (refundCash > remainingDebt) {
+      return setRefundError(`Số tiền hoàn trả không được vượt quá số tiền còn đang nợ (${new Intl.NumberFormat('vi-VN').format(remainingDebt)} ₫)!`);
     }
 
     // 1. Create income transaction for returning cash to fund
@@ -248,28 +287,26 @@ export default function Finance({
       category: 'hoan_ung',
       amount: refundCash,
       person: selectedAdvance.person,
-      desc: refundDesc.trim() || `Hoàn ứng quỹ: ${selectedAdvance.person} hoàn trả tiền mặt`,
+      desc: refundDesc.trim() || `Thu hoàn ứng tiền mặt: ${selectedAdvance.person} hoàn trả tiền mặt vào quỹ`,
       relatedTransactionId: selectedAdvance.id,
       createdAt: Date.now(),
     };
     onAddTransaction(refundTrans);
 
-    // 2. Update advance status
+    // 2. Update advance status:
+    // IMPORTANT: DO NOT change selectedAdvance.amount!
+    // The advance amount represents the original cash disbursement.
+    // Changing amount would reduce totalOut, creating a double-count in cashBalance (totalIn - totalOut)!
     if (onUpdateTransaction) {
-      if (refundCash >= selectedAdvance.amount) {
-        // Fully refunded
-        onUpdateTransaction({
-          ...selectedAdvance,
-          advanceStatus: 'da_hoan_ung',
-          settledAt: Date.now(),
-        });
-      } else {
-        // Partially refunded: decrease remaining advance amount
-        onUpdateTransaction({
-          ...selectedAdvance,
-          amount: selectedAdvance.amount - refundCash,
-        });
-      }
+      const newTotalRefunded = currentRefunded + refundCash;
+      const isFullyRefunded = newTotalRefunded >= selectedAdvance.amount;
+
+      onUpdateTransaction({
+        ...selectedAdvance,
+        refundedAmount: newTotalRefunded,
+        advanceStatus: isFullyRefunded ? 'da_hoan_ung' : 'dang_ung',
+        settledAt: isFullyRefunded ? Date.now() : undefined,
+      });
     }
 
     setIsRefundModalOpen(false);
@@ -521,10 +558,17 @@ export default function Finance({
 
                     <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850">
                       <div className="text-right">
-                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Số tiền ứng</span>
-                        <span className="text-sm sm:text-base font-extrabold font-mono text-amber-400">
-                          {new Intl.NumberFormat('vi-VN').format(f.amount)} ₫
+                        <span className="text-[10px] text-slate-500 block uppercase font-bold">
+                          {f.refundedAmount && f.refundedAmount > 0 ? 'Còn đang ứng' : 'Số tiền ứng'}
                         </span>
+                        <span className="text-sm sm:text-base font-extrabold font-mono text-amber-400">
+                          {new Intl.NumberFormat('vi-VN').format(getRemainingAdvance(f))} ₫
+                        </span>
+                        {f.refundedAmount && f.refundedAmount > 0 && (
+                          <span className="text-[10px] text-emerald-400 block font-mono">
+                            (Đã hoàn: {new Intl.NumberFormat('vi-VN').format(f.refundedAmount)} ₫ / {new Intl.NumberFormat('vi-VN').format(f.amount)} ₫)
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1.5">
@@ -790,9 +834,16 @@ export default function Finance({
                             <div className="space-y-0.5">
                               <span>{f.desc}</span>
                               {f.person && (
-                                <div className="flex items-center gap-1 text-[11px] text-slate-400 font-normal">
-                                  <UserCheck className="h-3 w-3 text-indigo-400" />
-                                  <span>Cán bộ: <strong className="text-slate-300">{f.person}</strong></span>
+                                <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400 font-normal">
+                                  <div className="flex items-center gap-1">
+                                    <UserCheck className="h-3 w-3 text-indigo-400" />
+                                    <span>Cán bộ: <strong className="text-slate-300">{f.person}</strong></span>
+                                  </div>
+                                  {f.category === 'tam_ung' && f.refundedAmount && f.refundedAmount > 0 ? (
+                                    <span className="text-[10px] text-emerald-400 font-mono">
+                                      (Đã hoàn: {new Intl.NumberFormat('vi-VN').format(f.refundedAmount)} ₫ • Còn nợ: {new Intl.NumberFormat('vi-VN').format(getRemainingAdvance(f))} ₫)
+                                    </span>
+                                  ) : null}
                                 </div>
                               )}
                             </div>
@@ -1098,9 +1149,9 @@ export default function Finance({
                 <span className="font-bold text-sm text-slate-200 block">{selectedAdvance.person}</span>
                 <p className="text-xs text-slate-400 italic">Khoản ứng: {selectedAdvance.desc}</p>
                 <div className="flex justify-between items-center pt-1 text-xs border-t border-slate-850">
-                  <span className="text-slate-400">Số tiền đang nợ:</span>
+                  <span className="text-slate-400">Số tiền còn đang nợ:</span>
                   <span className="font-mono font-bold text-amber-400">
-                    {new Intl.NumberFormat('vi-VN').format(selectedAdvance.amount)} ₫
+                    {new Intl.NumberFormat('vi-VN').format(getRemainingAdvance(selectedAdvance))} ₫
                   </span>
                 </div>
               </div>
