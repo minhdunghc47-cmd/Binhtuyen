@@ -29,7 +29,6 @@ import Scheduler from './components/Scheduler';
 import Kanban from './components/Kanban';
 import Finance from './components/Finance';
 import Projects from './components/Projects';
-import AIChatBot from './components/AIChatBot';
 import { fetchFromFirebase, facilitiesRef, tasksRef, fundsRef, projectsRef, db } from './firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 
@@ -620,19 +619,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* 4. AI CHATBOT WIDGET */}
-      <AIChatBot 
-        facilities={facilities} 
-        tasks={tasks}
-        funds={funds}
-        projects={projects}
-        onUpdateFacility={handleUpdateFacility}
-        onAddFacility={handleAddFacility}
-        onDeleteFacility={handleDeleteFacility}
-        onAddTask={handleAddTask}
-        onDeleteTask={handleDeleteTask}
-      />
     </div>
   );
 }
