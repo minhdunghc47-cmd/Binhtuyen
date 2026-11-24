@@ -21,7 +21,7 @@ import {
   FileSpreadsheet,
   BookOpen
 } from 'lucide-react';
-import { Facility, Task, FundTransaction, Project } from './types';
+import { Facility, Task, FundTransaction, Project, PaymentMethod } from './types';
 import { loadAllData, saveAllData, generateId, ZALO_PHONES } from './data';
 import Dashboard from './components/Dashboard';
 import Facilities from './components/Facilities';
@@ -271,10 +271,12 @@ export default function App() {
     triggerCloudSync('DELETE', 'projects', { id });
   };
 
-  const handleSettleProfitToQuỹ = (amount: number, desc: string, customId?: string): string => {
+  const handleSettleProfitToQuỹ = (amount: number, desc: string, customId?: string, paymentMethod?: PaymentMethod): string => {
     const newTrans: FundTransaction = {
       id: customId || generateId(),
       type: 'thu',
+      category: 'thu_quy',
+      paymentMethod: paymentMethod || 'tai_khoan',
       amount,
       desc,
       createdAt: Date.now()

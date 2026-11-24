@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Project, FundTransaction, SettlementStatus, SettlementStage } from '../types';
+import { Project, FundTransaction, SettlementStatus, SettlementStage, PaymentMethod } from '../types';
 import { 
   Wrench, 
   Plus, 
@@ -25,7 +25,9 @@ import {
   ArrowRight,
   Receipt,
   List,
-  LayoutGrid
+  LayoutGrid,
+  Wallet,
+  CreditCard
 } from 'lucide-react';
 import { MANAGERS, generateId } from '../data';
 
@@ -48,7 +50,7 @@ interface ProjectsProps {
   onAddProject: (project: Project) => void;
   onUpdateProject: (project: Project) => void;
   onDeleteProject: (id: string) => void;
-  onSettleProfitToQuỹ: (amount: number, desc: string, customId?: string) => string;
+  onSettleProfitToQuỹ: (amount: number, desc: string, customId?: string, paymentMethod?: PaymentMethod) => string;
   onDeleteTransaction?: (id: string) => void;
 }
 
@@ -88,6 +90,7 @@ export default function Projects({
   const [stageAmount, setStageAmount] = useState('');
   const [stageDate, setStageDate] = useState(new Date().toISOString().slice(0, 10));
   const [stageDestination, setStageDestination] = useState<'quy_to' | 'khac'>('quy_to');
+  const [stagePaymentMethod, setStagePaymentMethod] = useState<PaymentMethod>('tai_khoan');
   const [stageNotes, setStageNotes] = useState('');
   const [markAsFullySettled, setMarkAsFullySettled] = useState(false);
   const [stageFormError, setStageFormError] = useState('');
@@ -185,7 +188,7 @@ export default function Projects({
     let fundTransId: string | undefined = undefined;
     if (stageDestination === 'quy_to') {
       const logMessage = `Trích nộp ${stageName.trim()} dự án: ${currentProject.name}`;
-      fundTransId = onSettleProfitToQuỹ(amountNum, logMessage);
+      fundTransId = onSettleProfitToQuỹ(amountNum, logMessage, undefined, stagePaymentMethod);
     }
 
     const newStage: SettlementStage = {
@@ -193,6 +196,7 @@ export default function Projects({
       stageName: stageName.trim(),
       amount: amountNum,
       destination: stageDestination,
+      paymentMethod: stageDestination === 'quy_to' ? stagePaymentMethod : undefined,
       date: stageDate || new Date().toISOString().slice(0, 10),
       notes: stageNotes.trim(),
       fundTransactionId: fundTransId,
@@ -1115,9 +1119,22 @@ export default function Projects({
                               {new Date(stage.date).toLocaleDateString('vi-VN')}
                             </span>
                             {stage.destination === 'quy_to' ? (
-                              <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/40">
-                                Quỹ Tổ
-                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/40">
+                                  Quỹ Tổ
+                                </span>
+                                {stage.paymentMethod === 'tien_mat' ? (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-blue-950/60 text-blue-300 border border-blue-800/50 flex items-center gap-0.5">
+                                    <Wallet className="h-2.5 w-2.5" />
+                                    Tiền mặt
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-cyan-950/60 text-cyan-300 border border-cyan-800/50 flex items-center gap-0.5">
+                                    <CreditCard className="h-2.5 w-2.5" />
+                                    TK Bank
+                                  </span>
+                                )}
+                              </div>
                             ) : (
                               <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-slate-800 text-slate-300">
                                 Chia ngoài
@@ -1303,6 +1320,40 @@ export default function Projects({
                         </div>
                       </label>
                     </div>
+
+                    {/* Channel selector if nộp quỹ tổ */}
+                    {stageDestination === 'quy_to' && (
+                      <div className="p-2 bg-slate-900/80 border border-emerald-900/40 rounded-lg space-y-1 mt-2">
+                        <span className="text-[10px] text-slate-400 block font-semibold">Nộp vào nguồn quỹ:</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setStagePaymentMethod('tai_khoan')}
+                            className={`py-1.5 px-2 rounded border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                              stagePaymentMethod === 'tai_khoan'
+                                ? 'bg-cyan-950 border-cyan-600 text-cyan-300 ring-1 ring-cyan-500'
+                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-300'
+                            }`}
+                          >
+                            <CreditCard className="h-3 w-3 text-cyan-400" />
+                            <span>💳 TK Ngân Hàng</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setStagePaymentMethod('tien_mat')}
+                            className={`py-1.5 px-2 rounded border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                              stagePaymentMethod === 'tien_mat'
+                                ? 'bg-blue-950 border-blue-600 text-blue-300 ring-1 ring-blue-500'
+                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-300'
+                            }`}
+                          >
+                            <Wallet className="h-3 w-3 text-blue-400" />
+                            <span>💵 Tiền Mặt Két</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Stage Notes */}

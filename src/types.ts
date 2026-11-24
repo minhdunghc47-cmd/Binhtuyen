@@ -61,6 +61,7 @@ export interface Task {
 
 export type FundCategory = 'thu_quy' | 'chi_tieu' | 'tam_ung' | 'hoan_ung';
 export type AdvanceStatus = 'dang_ung' | 'da_hoan_ung' | 'da_quyet_toan';
+export type PaymentMethod = 'tien_mat' | 'tai_khoan'; // 'tien_mat' (TM) | 'tai_khoan' (TK Bank)
 
 export interface FundTransaction {
   id: string;
@@ -69,9 +70,11 @@ export interface FundTransaction {
   desc: string;
   createdAt: number;
   category?: FundCategory;
+  paymentMethod?: PaymentMethod; // Hình thức lưu/chi: Tiền mặt hoặc Tài khoản Bank
   person?: string; // Tên cán bộ tạm ứng / nộp tiền
   advanceStatus?: AdvanceStatus; // Trạng thái nếu là tạm ứng
   originalAmount?: number; // Số tiền ban đầu khi ứng
+  refundedAmount?: number; // Số tiền đã hoàn
   settledAt?: number; // Thời điểm hoàn ứng hoặc quyết toán
   relatedTransactionId?: string;
 }
@@ -84,6 +87,7 @@ export interface SettlementStage {
   amount: number;
   percentage?: number;
   destination: 'quy_to' | 'khac';
+  paymentMethod?: PaymentMethod; // Nộp vào Quỹ Tổ bằng TM hay TK Bank
   date: string;
   notes?: string;
   fundTransactionId?: string;

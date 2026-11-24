@@ -99,6 +99,15 @@ export default function AIChatBot({
 
     const todayStr = new Date().toISOString().slice(0, 10);
     const balance = funds.reduce((acc, f) => f.type === 'thu' ? acc + f.amount : acc - f.amount, 0);
+    const cashBalance = funds.reduce((acc, f) => {
+      if (f.paymentMethod && f.paymentMethod !== 'tien_mat') return acc;
+      return f.type === 'thu' ? acc + (f.amount || 0) : acc - (f.amount || 0);
+    }, 0);
+    const bankBalance = funds.reduce((acc, f) => {
+      if (f.paymentMethod !== 'tai_khoan') return acc;
+      return f.type === 'thu' ? acc + (f.amount || 0) : acc - (f.amount || 0);
+    }, 0);
+
     const activeAdvances = funds.filter(f => f.category === 'tam_ung' && (!f.advanceStatus || f.advanceStatus === 'dang_ung'));
     const totalAdvance = activeAdvances.reduce((sum, f) => sum + f.amount, 0);
     const advanceDetails = activeAdvances.length > 0 
@@ -112,7 +121,7 @@ export default function AIChatBot({
 - Tổng số cơ sở quản lý: ${facilities.length}
 - Số cơ sở Nhóm 1: ${facilities.filter(f => f.group === 'Nhóm 1').length}
 - Số cơ sở Nhóm 2: ${facilities.filter(f => f.group === 'Nhóm 2').length}
-- Tồn quỹ tiền mặt hiện tại: ${balance.toLocaleString('vi-VN')} VNĐ
+- Tổng tồn quỹ tổ: ${balance.toLocaleString('vi-VN')} VNĐ (Trong đó: Tiền mặt két: ${cashBalance.toLocaleString('vi-VN')} VNĐ, Tài khoản ngân hàng: ${bankBalance.toLocaleString('vi-VN')} VNĐ)
 - Tiền đang tạm ứng quỹ: ${totalAdvance.toLocaleString('vi-VN')} VNĐ (${advanceDetails})
 - Tổng số dự án thi công: ${projects.length} (Đã kết toán: ${projects.filter(p => (p.settlementStatus === 'da_ket_toan' || p.status === 'Đã kết toán')).length}, Đang kết toán: ${projects.filter(p => p.settlementStatus === 'dang_ket_toan').length}, Chưa kết toán: ${projects.filter(p => (!p.settlementStatus || p.settlementStatus === 'chua_ket_toan') && p.status !== 'Đã kết toán').length})
 - Các cán bộ quản lý: ${MANAGERS.join(', ')}

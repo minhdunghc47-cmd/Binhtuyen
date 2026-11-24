@@ -28,7 +28,7 @@ export default function Dashboard({
   const totalFacilities = facilities.filter((f) => f.recordStatus === 'hien_hanh').length;
   const pendingTasks = tasks.filter((t) => !t.isCompleted).length;
 
-  // Calculat fund balance
+  // Calculate fund balance
   const totalIn = funds
     .filter((f) => f.type === 'thu')
     .reduce((sum, f) => sum + f.amount, 0);
@@ -36,6 +36,17 @@ export default function Dashboard({
     .filter((f) => f.type === 'chi')
     .reduce((sum, f) => sum + f.amount, 0);
   const fundBalance = totalIn - totalOut;
+
+  // Breakdown Tiền mặt két vs Tài khoản ngân hàng
+  const cashBalance = funds.reduce((acc, f) => {
+    if (f.paymentMethod && f.paymentMethod !== 'tien_mat') return acc;
+    return f.type === 'thu' ? acc + (f.amount || 0) : acc - (f.amount || 0);
+  }, 0);
+
+  const bankBalance = funds.reduce((acc, f) => {
+    if (f.paymentMethod !== 'tai_khoan') return acc;
+    return f.type === 'thu' ? acc + (f.amount || 0) : acc - (f.amount || 0);
+  }, 0);
 
   // Compute facilities due for inspection
   // Nhóm 1: 1 year (365 days)
@@ -247,8 +258,14 @@ export default function Dashboard({
               <Wallet className="h-5 w-5" />
             </div>
           </div>
-          <div className="mt-3 flex items-center text-[11px] text-slate-400 gap-1 select-none">
-            Quỹ mua sắm cơ sở vật chất đơn vị
+          <div className="mt-2.5 flex flex-wrap items-center text-[10px] sm:text-[11px] gap-2 select-none border-t border-slate-800/80 pt-2">
+            <span className="text-blue-300 font-medium">
+              💵 TM: <strong className="font-mono text-blue-200">{new Intl.NumberFormat('vi-VN').format(cashBalance)} ₫</strong>
+            </span>
+            <span className="text-slate-600">•</span>
+            <span className="text-cyan-300 font-medium">
+              💳 TK: <strong className="font-mono text-cyan-200">{new Intl.NumberFormat('vi-VN').format(bankBalance)} ₫</strong>
+            </span>
           </div>
         </div>
       </div>

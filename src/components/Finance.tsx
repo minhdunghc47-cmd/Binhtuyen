@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { FundTransaction, FundCategory, AdvanceStatus } from '../types';
+import { FundTransaction, FundCategory, AdvanceStatus, PaymentMethod } from '../types';
 import { 
   Wallet, 
   Landmark, 
@@ -23,7 +23,8 @@ import {
   Search, 
   Users,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  CreditCard
 } from 'lucide-react';
 import { generateId, MANAGERS } from '../data';
 
@@ -49,6 +50,7 @@ export default function Finance({
   // Main Modal Form States
   const [editingTransId, setEditingTransId] = useState<string | null>(null);
   const [formCategory, setFormCategory] = useState<FundCategory>('thu_quy');
+  const [paymentMethodForm, setPaymentMethodForm] = useState<PaymentMethod>('tien_mat');
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
   const [person, setPerson] = useState(MANAGERS[0]);
@@ -59,11 +61,13 @@ export default function Finance({
   // Refund Modal States
   const [refundAmount, setRefundAmount] = useState('');
   const [refundDesc, setRefundDesc] = useState('');
+  const [refundMethod, setRefundMethod] = useState<PaymentMethod>('tien_mat');
   const [refundError, setRefundError] = useState('');
 
   // Table & Filter States
   const [filterType, setFilterType] = useState<'all' | 'thu' | 'chi' | 'tam_ung' | 'hoan_ung'>('all');
   const [filterManager, setFilterManager] = useState<string>('all');
+  const [filterMethod, setFilterMethod] = useState<'all' | 'tien_mat' | 'tai_khoan'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAdvanceHistory, setShowAdvanceHistory] = useState(false);
 
@@ -76,7 +80,24 @@ export default function Finance({
     .filter((f) => f.type === 'chi')
     .reduce((sum, f) => sum + (f.amount || 0), 0);
 
-  const cashBalance = totalIn - totalOut;
+  const totalBalance = totalIn - totalOut;
+
+  // Phân bổ dòng tiền theo Tiền mặt (TM trong két) và Tài khoản ngân hàng (TK Bank)
+  const cashIn = funds
+    .filter((f) => f.type === 'thu' && (!f.paymentMethod || f.paymentMethod === 'tien_mat'))
+    .reduce((sum, f) => sum + (f.amount || 0), 0);
+  const cashOut = funds
+    .filter((f) => f.type === 'chi' && (!f.paymentMethod || f.paymentMethod === 'tien_mat'))
+    .reduce((sum, f) => sum + (f.amount || 0), 0);
+  const cashBalance = cashIn - cashOut;
+
+  const bankIn = funds
+    .filter((f) => f.type === 'thu' && f.paymentMethod === 'tai_khoan')
+    .reduce((sum, f) => sum + (f.amount || 0), 0);
+  const bankOut = funds
+    .filter((f) => f.type === 'chi' && f.paymentMethod === 'tai_khoan')
+    .reduce((sum, f) => sum + (f.amount || 0), 0);
+  const bankBalance = bankIn - bankOut;
 
   // Helper to calculate remaining advance debt for a transaction
   const getRemainingAdvance = (f: FundTransaction): number => {
@@ -148,6 +169,7 @@ export default function Finance({
     setFormError('');
     setEditingTransId(null);
     setFormCategory(category);
+    setPaymentMethodForm('tien_mat');
     setAmount('');
     setDesc('');
     setTxDate(new Date().toISOString().slice(0, 10));
@@ -177,6 +199,7 @@ export default function Finance({
     // Determine category
     const cat: FundCategory = trans.category || (trans.type === 'thu' ? 'thu_quy' : 'chi_tieu');
     setFormCategory(cat);
+    setPaymentMethodForm(trans.paymentMethod || 'tien_mat');
 
     setAmount(String(trans.amount || ''));
     setDesc(trans.desc || '');
@@ -234,6 +257,7 @@ export default function Finance({
       id: editingTransId || generateId(),
       type: isIncome ? 'thu' : 'chi',
       category: formCategory,
+      paymentMethod: paymentMethodForm,
       amount: cash,
       originalAmount: formCategory === 'tam_ung' ? (existing?.originalAmount || cash) : undefined,
       advanceStatus: formCategory === 'tam_ung' ? advanceStatusForm : undefined,
@@ -258,11 +282,12 @@ export default function Finance({
     setSelectedAdvance(advance);
     const remainingDebt = getRemainingAdvance(advance);
     setRefundAmount(String(remainingDebt));
-    setRefundDesc(`Thu hoàn ứng tiền mặt: ${advance.person || 'Cán bộ'} hoàn trả khoản ${advance.desc}`);
+    setRefundMethod(advance.paymentMethod || 'tien_mat');
+    setRefundDesc(`Thu hoàn ứng: ${advance.person || 'Cán bộ'} hoàn trả khoản ${advance.desc}`);
     setIsRefundModalOpen(true);
   };
 
-  // Process refund (Hoàn ứng tiền mặt vào quỹ)
+  // Process refund (Hoàn ứng tiền vào quỹ)
   const handleConfirmRefund = (e: React.FormEvent) => {
     e.preventDefault();
     setRefundError('');
@@ -280,23 +305,21 @@ export default function Finance({
       return setRefundError(`Số tiền hoàn trả không được vượt quá số tiền còn đang nợ (${new Intl.NumberFormat('vi-VN').format(remainingDebt)} ₫)!`);
     }
 
-    // 1. Create income transaction for returning cash to fund
+    // 1. Create income transaction for returning money to fund (cash or bank)
     const refundTrans: FundTransaction = {
       id: generateId(),
       type: 'thu',
       category: 'hoan_ung',
+      paymentMethod: refundMethod,
       amount: refundCash,
       person: selectedAdvance.person,
-      desc: refundDesc.trim() || `Thu hoàn ứng tiền mặt: ${selectedAdvance.person} hoàn trả tiền mặt vào quỹ`,
+      desc: refundDesc.trim() || `Thu hoàn ứng: ${selectedAdvance.person} hoàn trả tiền vào quỹ`,
       relatedTransactionId: selectedAdvance.id,
       createdAt: Date.now(),
     };
     onAddTransaction(refundTrans);
 
-    // 2. Update advance status:
-    // IMPORTANT: DO NOT change selectedAdvance.amount!
-    // The advance amount represents the original cash disbursement.
-    // Changing amount would reduce totalOut, creating a double-count in cashBalance (totalIn - totalOut)!
+    // 2. Update advance status
     if (onUpdateTransaction) {
       const newTotalRefunded = currentRefunded + refundCash;
       const isFullyRefunded = newTotalRefunded >= selectedAdvance.amount;
@@ -338,6 +361,10 @@ export default function Finance({
 
     if (filterManager !== 'all' && f.person !== filterManager) return false;
 
+    // Filter by payment method (Tiền mặt vs TK Bank)
+    if (filterMethod === 'tien_mat' && f.paymentMethod && f.paymentMethod !== 'tien_mat') return false;
+    if (filterMethod === 'tai_khoan' && f.paymentMethod !== 'tai_khoan') return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchDesc = (f.desc || '').toLowerCase().includes(q);
@@ -357,7 +384,7 @@ export default function Finance({
             Sổ Sách & Quỹ Đơn Vị Bình Tuyền
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Minh bạch thu chi, cho phép chỉnh sửa nội dung/số tiền/ngày tháng, theo dõi chi tiết cán bộ tạm ứng quỹ.
+            Minh bạch thu chi, tách biệt nguồn Tiền mặt trong két và Tài khoản ngân hàng, theo dõi chi tiết cán bộ tạm ứng quỹ.
           </p>
         </div>
 
@@ -380,46 +407,70 @@ export default function Finance({
         </div>
       </div>
 
-      {/* 4 Summary Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {/* Total In */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 border-t-4 border-t-emerald-500/80 space-y-1">
-          <p className="text-[10px] sm:text-xs font-semibold text-slate-400 tracking-wider uppercase">TỔNG THU LUỸ KẾ</p>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-emerald-400 font-mono flex items-center gap-1.5">
-            <TrendingUp className="h-5 w-5 text-emerald-500" />
-            {new Intl.NumberFormat('vi-VN').format(totalIn)} ₫
+      {/* 5 Summary Stats Cards: Quỹ tổng, Tiền mặt két, Tài khoản ngân hàng, Tổng chi, Đang tạm ứng */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {/* Total Fund Balance */}
+        <div className="col-span-2 sm:col-span-1 bg-slate-900 border border-slate-800 rounded-xl p-3.5 border-t-4 border-t-emerald-500 space-y-1 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-slate-400 tracking-wider uppercase">TỔNG TỒN QUỸ TỔ</p>
+          <h3 className="text-lg sm:text-xl font-extrabold text-emerald-400 font-mono flex items-center gap-1.5">
+            <Landmark className="h-4 w-4 text-emerald-400" />
+            {new Intl.NumberFormat('vi-VN').format(totalBalance)} ₫
           </h3>
-          <span className="text-[10px] text-slate-500 block">Tiền vào quỹ thực tế</span>
+          <span className="text-[10px] text-slate-500 block">Tổng quỹ thực có (TM + TK)</span>
         </div>
 
-        {/* Total Out */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 border-t-4 border-t-rose-500/80 space-y-1">
+        {/* Tiền mặt trong két */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 border-t-4 border-t-blue-500 space-y-1 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-blue-400 tracking-wider uppercase flex items-center gap-1">
+            <Wallet className="h-3.5 w-3.5" />
+            TIỀN MẶT (TRONG KÉT)
+          </p>
+          <h3 className="text-lg sm:text-xl font-extrabold text-blue-300 font-mono flex items-center gap-1.5">
+            {new Intl.NumberFormat('vi-VN').format(cashBalance)} ₫
+          </h3>
+          <span className="text-[10px] text-slate-500 block">
+            Thu: +{new Intl.NumberFormat('vi-VN').format(cashIn)} | Chi: -{new Intl.NumberFormat('vi-VN').format(cashOut)}
+          </span>
+        </div>
+
+        {/* Tài khoản ngân hàng (Bank) */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 border-t-4 border-t-cyan-500 space-y-1 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-cyan-400 tracking-wider uppercase flex items-center gap-1">
+            <CreditCard className="h-3.5 w-3.5" />
+            TÀI KHOẢN BANK (TK)
+          </p>
+          <h3 className="text-lg sm:text-xl font-extrabold text-cyan-300 font-mono flex items-center gap-1.5">
+            {new Intl.NumberFormat('vi-VN').format(bankBalance)} ₫
+          </h3>
+          <span className="text-[10px] text-slate-500 block">
+            Thu: +{new Intl.NumberFormat('vi-VN').format(bankIn)} | Chi: -{new Intl.NumberFormat('vi-VN').format(bankOut)}
+          </span>
+        </div>
+
+        {/* Tổng Chi Tiêu */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 border-t-4 border-t-rose-500/80 space-y-1 shadow-sm">
           <p className="text-[10px] sm:text-xs font-semibold text-slate-400 tracking-wider uppercase">TỔNG CHI TIÊU</p>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-rose-400 font-mono flex items-center gap-1.5">
-            <TrendingDown className="h-5 w-5 text-rose-500" />
+          <h3 className="text-lg sm:text-xl font-extrabold text-rose-400 font-mono flex items-center gap-1.5">
+            <TrendingDown className="h-4 w-4 text-rose-500" />
             {new Intl.NumberFormat('vi-VN').format(totalOut)} ₫
           </h3>
           <span className="text-[10px] text-slate-500 block">Đã xuất quỹ (gồm tạm ứng)</span>
         </div>
 
-        {/* Cash Balance */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 border-t-4 border-t-blue-500/80 space-y-1">
-          <p className="text-[10px] sm:text-xs font-semibold text-slate-400 tracking-wider uppercase">TỒN QUỸ TIỀN MẶT</p>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-blue-400 font-mono flex items-center gap-1.5">
-            <Wallet className="h-5 w-5 text-blue-500" />
-            {new Intl.NumberFormat('vi-VN').format(cashBalance)} ₫
-          </h3>
-          <span className="text-[10px] text-slate-500 block">Hiện còn trong két</span>
-        </div>
-
-        {/* Total Active Advances */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 border-t-4 border-t-amber-500/80 space-y-1">
+        {/* Đang Tạm Ứng */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 border-t-4 border-t-amber-500/80 space-y-1 shadow-sm">
           <p className="text-[10px] sm:text-xs font-semibold text-amber-400 tracking-wider uppercase flex items-center gap-1">
             <Coins className="h-3.5 w-3.5" />
-            ĐANG TẠM ỨNG QUỸ
+            ĐANG TẠM ỨNG
           </p>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-amber-300 font-mono flex items-center gap-1.5">
+          <h3 className="text-lg sm:text-xl font-extrabold text-amber-300 font-mono flex items-center gap-1.5">
             {new Intl.NumberFormat('vi-VN').format(totalActiveAdvance)} ₫
+          </h3>
+          <span className="text-[10px] text-slate-400 block">
+            {activeAdvancersCount > 0 ? `${activeAdvancersCount} cán bộ đang cầm tiền` : 'Không có ai nợ quỹ'}
+          </span>
+        </div>
+      </div>
           </h3>
           <span className="text-[10px] text-slate-400 block">
             {activeAdvancersCount > 0 ? `${activeAdvancersCount} cán bộ đang cầm tiền` : 'Không có ai nợ quỹ'}
@@ -703,7 +754,7 @@ export default function Finance({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Filter Buttons */}
+            {/* Filter Buttons By Category */}
             <div className="flex flex-wrap gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
               <button
                 onClick={() => setFilterType('all')}
@@ -747,6 +798,36 @@ export default function Finance({
               </button>
             </div>
 
+            {/* Filter Buttons By Payment Method (Tiền mặt vs TK Bank) */}
+            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
+              <button
+                onClick={() => setFilterMethod('all')}
+                className={`px-2 py-1 rounded font-bold transition ${
+                  filterMethod === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Mọi nguồn
+              </button>
+              <button
+                onClick={() => setFilterMethod('tien_mat')}
+                className={`px-2 py-1 rounded font-bold transition flex items-center gap-1 ${
+                  filterMethod === 'tien_mat' ? 'bg-blue-950 text-blue-300 border border-blue-800' : 'text-slate-400 hover:text-blue-300'
+                }`}
+              >
+                <Wallet className="h-3 w-3" />
+                <span>Tiền mặt</span>
+              </button>
+              <button
+                onClick={() => setFilterMethod('tai_khoan')}
+                className={`px-2 py-1 rounded font-bold transition flex items-center gap-1 ${
+                  filterMethod === 'tai_khoan' ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'text-slate-400 hover:text-cyan-300'
+                }`}
+              >
+                <CreditCard className="h-3 w-3" />
+                <span>TK Bank</span>
+              </button>
+            </div>
+
             {/* Search Box */}
             <div className="relative w-full sm:w-48">
               <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -767,9 +848,11 @@ export default function Finance({
             <thead>
               <tr className="bg-slate-950/20 text-slate-400 text-left">
                 <th className="px-5 py-3 font-semibold">Ngày tháng</th>
-                <th className="px-3 py-3 font-semibold">Phân loại</th>
+                <th className="px-3 py-3 font-semibold">Phân loại & Nguồn</th>
                 <th className="px-4 py-3 font-semibold">Nội dung giải trình</th>
-                <th className="px-5 py-3 font-semibold text-right">Số tiền mặt</th>
+                <th className="px-5 py-3 font-semibold text-right">
+                  Số tiền {filterMethod === 'tai_khoan' ? '(TK Bank)' : filterMethod === 'tien_mat' ? '(Tiền mặt)' : '(Thu/Chi)'}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50 bg-transparent">
@@ -821,13 +904,28 @@ export default function Finance({
                       );
                     }
 
+                    const methodBadge = f.paymentMethod === 'tai_khoan' ? (
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-cyan-950 text-cyan-300 border border-cyan-800/60 flex items-center gap-1">
+                        <CreditCard className="h-2.5 w-2.5 text-cyan-400" />
+                        TK Bank
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-950 text-blue-300 border border-blue-900/60 flex items-center gap-1">
+                        <Wallet className="h-2.5 w-2.5 text-blue-400" />
+                        Tiền mặt
+                      </span>
+                    );
+
                     return (
                       <tr key={`${f.id}-${idx}`} className="hover:bg-slate-850/30 transition-colors">
                         <td className="px-5 py-3.5 font-mono text-slate-400 text-[11px] whitespace-nowrap">
                           {new Date(f.createdAt).toLocaleDateString('vi-VN')}
                         </td>
                         <td className="px-3 py-3.5 whitespace-nowrap">
-                          {categoryBadge}
+                          <div className="flex flex-col gap-1 items-start">
+                            {categoryBadge}
+                            {methodBadge}
+                          </div>
                         </td>
                         <td className="px-4 py-3.5 font-semibold text-slate-200">
                           <div className="flex items-center justify-between group">
@@ -978,6 +1076,40 @@ export default function Finance({
                   <RotateCcw className="h-3.5 w-3.5 text-blue-400" />
                   <span>Hoàn Ứng</span>
                 </button>
+              </div>
+
+              {/* Payment Method Selector (Tiền mặt vs Tài khoản Bank) */}
+              <div className="bg-slate-950/70 p-2.5 rounded-lg border border-slate-800 space-y-1.5">
+                <label className="block text-[11px] font-semibold text-slate-300">
+                  Nguồn quỹ / Hình thức giao dịch (*)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethodForm('tien_mat')}
+                    className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                      paymentMethodForm === 'tien_mat'
+                        ? 'bg-blue-950/80 border-blue-500 text-blue-300 ring-1 ring-blue-500 shadow'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Wallet className="h-3.5 w-3.5 text-blue-400" />
+                    <span>💵 Tiền Mặt Két</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethodForm('tai_khoan')}
+                    className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                      paymentMethodForm === 'tai_khoan'
+                        ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300 ring-1 ring-cyan-500 shadow'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <CreditCard className="h-3.5 w-3.5 text-cyan-400" />
+                    <span>💳 TK Ngân Hàng</span>
+                  </button>
+                </div>
               </div>
 
               {/* Date and Advance Status (if applicable) */}
@@ -1156,9 +1288,43 @@ export default function Finance({
                 </div>
               </div>
 
+              {/* Nguồn hoàn trả vào quỹ (Tiền mặt vs TK Bank) */}
               <div>
                 <label className="block text-xs font-semibold text-slate-400 mb-1">
-                  Số tiền hoàn trả tiền mặt (₫) (*)
+                  Nguồn hoàn trả vào quỹ (*)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRefundMethod('tien_mat')}
+                    className={`p-2 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                      refundMethod === 'tien_mat'
+                        ? 'bg-blue-950/80 border-blue-500 text-blue-300 ring-1 ring-blue-500 shadow'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Wallet className="h-3.5 w-3.5 text-blue-400" />
+                    <span>💵 Tiền mặt két</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setRefundMethod('tai_khoan')}
+                    className={`p-2 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                      refundMethod === 'tai_khoan'
+                        ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300 ring-1 ring-cyan-500 shadow'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <CreditCard className="h-3.5 w-3.5 text-cyan-400" />
+                    <span>💳 TK Ngân hàng</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">
+                  Số tiền hoàn trả vào quỹ (₫) (*)
                 </label>
                 <input
                   type="number"

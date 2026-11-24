@@ -197,6 +197,8 @@ export const INITIAL_FUNDS: FundTransaction[] = [
   {
     id: 'fund-1',
     type: 'thu',
+    category: 'thu_quy',
+    paymentMethod: 'tien_mat',
     amount: 15000000,
     desc: 'Thu quỹ đóng góp định kỳ quý I/2026 từ các hội đồng thành viên',
     createdAt: Date.now() - 80 * 24 * 60 * 60 * 1000
@@ -204,6 +206,8 @@ export const INITIAL_FUNDS: FundTransaction[] = [
   {
     id: 'fund-2',
     type: 'thu',
+    category: 'thu_quy',
+    paymentMethod: 'tai_khoan',
     amount: 5000000,
     desc: 'Trích lục 30% lợi nhuận từ Dự Án thi công Nhà Xưởng dệt may may Bình Tuyền',
     createdAt: Date.now() - 40 * 24 * 60 * 60 * 1000
@@ -211,6 +215,8 @@ export const INITIAL_FUNDS: FundTransaction[] = [
   {
     id: 'fund-3',
     type: 'chi',
+    category: 'chi_tieu',
+    paymentMethod: 'tien_mat',
     amount: 3200000,
     desc: 'Chi mua sắm trang thiết bị bảo hộ, mũ nón, ủng chống nước và vật tư cứu nạn cứu hộ mới',
     createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000
@@ -218,6 +224,8 @@ export const INITIAL_FUNDS: FundTransaction[] = [
   {
     id: 'fund-4',
     type: 'chi',
+    category: 'chi_tieu',
+    paymentMethod: 'tien_mat',
     amount: 2500000,
     desc: 'Chi bồi dưỡng hội thao nghiệp vụ PCCC & CNCH địa bàn cụm công nghiệp Hải Long',
     createdAt: Date.now() - 15 * 24 * 60 * 60 * 1000
@@ -226,6 +234,7 @@ export const INITIAL_FUNDS: FundTransaction[] = [
     id: 'fund-5',
     type: 'chi',
     category: 'tam_ung',
+    paymentMethod: 'tien_mat',
     person: 'Đ/c Dũng',
     amount: 1500000,
     originalAmount: 1500000,
