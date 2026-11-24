@@ -471,12 +471,6 @@ export default function Finance({
           </span>
         </div>
       </div>
-          </h3>
-          <span className="text-[10px] text-slate-400 block">
-            {activeAdvancersCount > 0 ? `${activeAdvancersCount} cán bộ đang cầm tiền` : 'Không có ai nợ quỹ'}
-          </span>
-        </div>
-      </div>
 
       {/* DEDICATED PANEL: THEO DÕI CÁN BỘ TẠM ỨNG QUỸ */}
       <div className="bg-slate-900/80 border border-amber-900/30 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
